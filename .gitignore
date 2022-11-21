@@ -1,2 +1,5 @@
 
 *.csv
+*.pyc
+data/curated/OriginalData_AddDerived/.DS_Store
+.DS_Store
