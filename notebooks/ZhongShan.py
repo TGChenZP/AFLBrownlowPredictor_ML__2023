@@ -24,7 +24,8 @@ def setup_directory(directories_to_create = ['notebooks',
         'data', 
         'data/raw', 
         'data/curated', 
-        'presentables']
+        'presentables',
+        'can_delete']
     ):
         """ Function to setup directory for a new project """
 
@@ -38,11 +39,14 @@ def setup_directory(directories_to_create):
         """ Function to setup new directory for a new project. 
         Must write full relative directory! """
 
-        for directory in directories_to_create:
+        if type(directories_to_create) is list:
+            for directory in directories_to_create:
+                if not os.path.exists(directory):
+                    os.makedirs(directory)
+        
+        elif type(directories_to_create) is str:
             if not os.path.exists(directory):
-                os.makedirs(directory)
-
-
+                    os.makedirs(directory)
 
 
 
@@ -62,7 +66,7 @@ class ZhongShan:
         print('Pandas DataFrame readin successful')
 
         if toggle_index:
-            self.full_data = self.reset_index(self.full_data)
+            self.full_data = self._reset_index(self.full_data)
             print('Reset index successful')
         else:
             print('Did not reset index upon request')
@@ -106,7 +110,7 @@ class ZhongShan:
 
 
     
-    def reset_index(self, df):
+    def _reset_index(self, df):
         """ Helper function to reset index """
 
         df.index = range(len(df))
@@ -114,8 +118,8 @@ class ZhongShan:
     
 
 
-    def fill_na(self, df_name, fill_value=0): #TODO
-        """ Helper to fill na values in data with default value 0 """
+    def fill_na(self, df_name, fill_value=0):
+        """ Fills na values in data with default value 0 """
 
         if df_name == 'Full':
             if self.full_data is None:
@@ -172,7 +176,7 @@ class ZhongShan:
 
 
 
-    def one_hot_encode_transform(self, df_name, col_to_ohe): #TODO
+    def one_hot_encode_transform(self, df_name, col_to_ohe): 
         """ OHE transform one column of data using pre-trained OHE object """
 
         if self.OHE_storage is None:
@@ -288,7 +292,7 @@ class ZhongShan:
 
 
 
-    def basic_overview(self, df_name, view_how_many=10): #TODO
+    def basic_overview(self, df_name, view_how_many=10): 
         """ Head() and Tail() the current data (we choose which it is), and print out number of rows and columns """
 
         if df_name == 'Full':
@@ -432,7 +436,7 @@ class ZhongShan:
     
 
     def get_boxplot(self, col):
-        """ Generate boxplots of each retained column using full data """
+        """ Generate boxplots of a column using full data """
 
         if self.full_data_IDE_T is None:
             print('Please run .get_full_data_analysis() before re-attempting this method')
@@ -558,7 +562,7 @@ class ZhongShan:
 
 
 
-    def pca_transform(self, df_name): #TODO
+    def pca_transform(self, df_name): 
         """ PCA transform data using pre-trained PCA object """
 
         if self.pca is None:
@@ -976,7 +980,7 @@ class ZhongShan:
                 return
             for label in self.label_columns:
                 tmp_final_features[label] = list(self.abs_corr_matrix[self.abs_corr_matrix[label]>self.feature_selection_cutoffs].index)
-        else:
+        elif metric == 'nmi':
             if self.NMI_matrix is None:
                 print("Please run .get_nmi() before re-attempting")
                 return
@@ -1064,8 +1068,13 @@ class SanMin:
         self.final_features = copy.deepcopy(zhongshan.final_features)
         self.retained_columns = copy.deepcopy(zhongshan.retained_columns)
 
+        self.feature_selected_future_data = None
+
+
 
     def import_future_data(self, future_data, toggle_index = True):
+        """ Read in Future Data for transformation """
+
         self.future_data = future_data
 
         if toggle_index:
@@ -1077,6 +1086,8 @@ class SanMin:
 
 
     def export_data(self, label, address, index=False):
+        """ export the manipulated future data """
+
         if self.feature_selected_future_data is None:
             print('Please run .get_feature_selected_data() before re-attempting')
             return
@@ -1107,7 +1118,7 @@ class SanMin:
     
 
 
-    def fill_na(self, fill_value=0): #TODO
+    def fill_na(self, fill_value=0): 
         """ Helper to fill na values in data with default value 0 """
 
         if self.future_data is None:
@@ -1120,7 +1131,7 @@ class SanMin:
 
 
 
-    def one_hot_encode_transform(self, col_to_ohe): #TODO
+    def one_hot_encode_transform(self, col_to_ohe): 
         """ OHE transform one column of data using pre-trained OHE object """
 
         if self.OHE_storage is None:
@@ -1147,7 +1158,7 @@ class SanMin:
 
 
 
-    def pca_transform(self): #TODO
+    def pca_transform(self): 
         """ PCA transform data using pre-trained PCA object """
 
         if self.pca is None:
@@ -1171,7 +1182,7 @@ class SanMin:
 
 
     def get_feature_selected_data(self):
-        """ Apply the columns to our data """
+        """ Apply the pre-selected columns to Future Data data """
 
         if self.future_data is None:
             print("Please input Future Data")
