@@ -45,8 +45,8 @@ def setup_directory(directories_to_create):
                     os.makedirs(directory)
         
         elif type(directories_to_create) is str:
-            if not os.path.exists(directory):
-                    os.makedirs(directory)
+            if not os.path.exists(directories_to_create):
+                    os.makedirs(directories_to_create)
 
 
 
