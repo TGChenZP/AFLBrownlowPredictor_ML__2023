@@ -3,3 +3,7 @@
 *.pyc
 data/curated/OriginalData_AddDerived/.DS_Store
 .DS_Store
+models/AFL_pipeline.pickle
+models/AFL_pipeline.pickle
+*.pickle
+*.pickle
