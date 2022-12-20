@@ -39,7 +39,6 @@ class JiXi:
         self.hyperparameters = None
         self.checked = None
         self.result = None
-        self.tuning_result = None
         self.tuning_result_saving_address = None
         self.object_saving_address = None
         self._up_to = 0
@@ -54,8 +53,8 @@ class JiXi:
         self._core = None
         self._relative_combos = None
         self._both_combos = None
-        self.dealt_with = None
-        self.pos_neg_combos = None
+        self._dealt_with = None
+        self._pos_neg_combos = None
         self._abs_max = None
         self._new_combos = None
 
@@ -184,18 +183,21 @@ class JiXi:
 
 
     
-    def change_tuning_style(self, type, seed = None, outer_most_layer = 2, randomise = True): #TODO
+    def change_tuning_style(self, type, seed = None, outer_most_layer = 2, randomise = True): 
         # Function which determines how to order the combinations for tuning
 
         if not self.combos:
             print("Missing hyperparameter choices, please run .set_hyperparameters() first")
             return
 
+        self.combos.sort() # to ensure functionality of seed, always sort first
+
         if type == 'a': # Sorted order (nested loops)
-            self.combos.sort()
+            # sorting operation conducted previously
             print('Changed tuning order to sorted')
         
         elif type == 'b': # Random order
+            
             if seed:
                 random.seed(seed)
             else:
@@ -241,7 +243,7 @@ class JiXi:
         """ Helper to get Layer by Layer order """
 
         retain = copy.deepcopy(self._both_combos)
-        self.dealt_with = list()
+        self._dealt_with = list()
 
         # starting with the outmost layer, ending with -1 because of the >
         for i in range(self.outmost_layer, -2, -1):
@@ -261,7 +263,7 @@ class JiXi:
                     tmp_retain.append(item)
 
             retain = tmp_retain
-            self.dealt_with.append(tmp_dealt_with)
+            self._dealt_with.append(tmp_dealt_with)
 
 
 
@@ -270,8 +272,8 @@ class JiXi:
 
         self.combos = list()
         # working with dealt_with backwards because we want the innermost layers first
-        for i in range(len(self.dealt_with)-1, -1, -1):
-            self.combos.extend(self.dealt_with[i])
+        for i in range(len(self._dealt_with)-1, -1, -1):
+            self.combos.extend(self._dealt_with[i])
             
 
 
@@ -322,11 +324,11 @@ class JiXi:
         """ Helper to get all combinations of -1 and 1 """
 
         ##ALGORITHM
-        self.pos_neg_combos = [[]]
+        self._pos_neg_combos = [[]]
         for i in range(len(self.n_items)):
 
-            tmp = copy.deepcopy(self.pos_neg_combos)
-            self.pos_neg_combos = list()
+            tmp = copy.deepcopy(self._pos_neg_combos)
+            self._pos_neg_combos = list()
 
             for x in tmp:
 
@@ -335,7 +337,7 @@ class JiXi:
                     
                     y.append(k)
 
-                    self.pos_neg_combos.append(y)
+                    self._pos_neg_combos.append(y)
 
 
 
@@ -360,7 +362,7 @@ class JiXi:
 
         diag_rel_combos = list()
         for i in range(self._abs_max):
-            diag_rel_combos.extend([[(i+1)*pos_neg_combo[j] for j in range(len(self.n_items))] for pos_neg_combo in self.pos_neg_combos])
+            diag_rel_combos.extend([[(i+1)*pos_neg_combo[j] for j in range(len(self.n_items))] for pos_neg_combo in self._pos_neg_combos])
         
         tmp_diag_combos = [[combo[j] + self._core[j] for j in range(len(self.n_items))] for combo in diag_rel_combos]
 
@@ -434,7 +436,7 @@ class JiXi:
             
             else:
                 print(f'Already Trained and Tested combination {self._up_to}')
-            
+      
 
 
     def _train_and_test_combo(self, combo):
@@ -557,6 +559,12 @@ class JiXi:
     def read_in_tuning_result_df(self, address): 
         """ Read in tuning result csv and read data into checked and result arrays """
 
+        if self.parameter_choices is None:
+            print("Missing parameter_choices to build parameter_value_map_index, please run set_hyperparameters() first")
+
+        if self.clf_type is None:
+            print('Missing clf_type. Please run .read_in_model() first.')
+
         self.tuning_result = pd.read_csv(address)
         print(f"Successfully read in tuning result of {len(self.tuning_result)} rows")
 
@@ -620,6 +628,6 @@ class JiXi:
 
 
     def view_best_combo_and_score(self):
-        """ View best combination and score """
+        """ View best combination and its validation score """
         
         print(f'(Current) Best combo: {self.best_combo} with val score {self.best_score}')
