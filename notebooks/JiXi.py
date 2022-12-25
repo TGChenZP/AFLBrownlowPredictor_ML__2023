@@ -57,6 +57,7 @@ class JiXi:
         self._pos_neg_combos = None
         self._abs_max = None
         self._new_combos = None
+        self.parameter_value_map_index = None
 
         self.regression_extra_output_columns = ['Train r2', 'Val r2', 'Test r2', 
             'Train RMSE', 'Val RMSE', 'Test RMSE', 'Train MAPE', 'Val MAPE', 'Test MAPE', 'Time']
@@ -118,22 +119,6 @@ class JiXi:
         self._setup_tuning_result_df()
 
         print("Successfully recorded hyperparameter choices")
-
-
-
-    def set_tuning_result_saving_address(self, address):
-        """ Read in where to save tuning object """
-
-        self.tuning_result_saving_address = address
-        print('Successfully set tuning output address')
-
-
-    
-    def _set_object_saving_address(self, address):
-        """ Read in where to save the JiXi object """
-
-        self.object_saving_address = address
-        print('Successfully set object output address')
 
 
 
@@ -552,7 +537,14 @@ class JiXi:
     def _save_tuning_result(self):
         """ Helper to export tuning result csv """
 
-        self.tuning_result.to_csv(self.tuning_result_saving_address, index=False)
+        self.tuning_result.to_csv(f'{self.tuning_result_saving_address}.csv', index=False)
+
+
+    
+    def view_best_combo_and_score(self):
+        """ View best combination and its validation score """
+        
+        print(f'(Current) Best combo: {self.best_combo} with val score {self.best_score}')
 
     
 
@@ -603,6 +595,22 @@ class JiXi:
     
 
 
+    def set_tuning_result_saving_address(self, address):
+        """ Read in where to save tuning object """
+
+        self.tuning_result_saving_address = address
+        print('Successfully set tuning output address')
+
+
+    
+    def _set_object_saving_address(self, address):
+        """ Read in where to save the JiXi object """
+
+        self.object_saving_address = address
+        print('Successfully set object output address')
+
+
+
     def export_jixi(self, address):
         """ Export jixi object """
 
@@ -624,10 +632,3 @@ class JiXi:
             pickle.dump(object_save, f)
 
         print(f'Successfully exported JiXi object as {self.object_saving_address}')
-
-
-
-    def view_best_combo_and_score(self):
-        """ View best combination and its validation score """
-        
-        print(f'(Current) Best combo: {self.best_combo} with val score {self.best_score}')

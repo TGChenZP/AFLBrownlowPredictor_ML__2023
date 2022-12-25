@@ -13,3 +13,4 @@ models/AFL_pipeline.pickle
 .idea/inspectionProfiles/Project_Default.xml
 .idea/inspectionProfiles/profiles_settings.xml
 .idea/BrownlowPredictorPlus.iml
+*.json

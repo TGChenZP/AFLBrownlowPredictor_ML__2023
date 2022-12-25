@@ -17,7 +17,26 @@ from sklearn.preprocessing import StandardScaler
 
 
 
-def setup_directory(directories_to_create = ['notebooks', 
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import os
+import copy
+import pickle
+
+from sklearn.metrics import normalized_mutual_info_score as NMI
+from itertools import combinations 
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.model_selection import train_test_split
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
+
+
+
+
+
+def setup_project_directory(directories_to_create = ['notebooks', 
         'scripts', 
         'plots', 
         'models', 
@@ -35,7 +54,7 @@ def setup_directory(directories_to_create = ['notebooks',
 
 
 
-def setup_directory(directories_to_create):
+def create_directories(directories_to_create):
         """ Function to setup new directory for a new project. 
         Must write full relative directory! """
 
@@ -1043,16 +1062,16 @@ class ZhongShan:
             return
 
         if df_name == "Full":
-            self.feature_selected_full_data[label].to_csv(address, index=index)
+            self.feature_selected_full_data[label].to_csv(f'{address}.csv', index=index)
         
         elif df_name == "Train":
-            self.feature_selected_train_data[label].to_csv(address, index=index)
+            self.feature_selected_train_data[label].to_csv(f'{address}.csv', index=index)
 
         elif df_name == "Validate":
-            self.feature_selected_val_data[label].to_csv(address, index=index)
+            self.feature_selected_val_data[label].to_csv(f'{address}.csv', index=index)
 
         elif df_name == "Test":
-            self.feature_selected_test_data[label].to_csv(address, index=index)
+            self.feature_selected_test_data[label].to_csv(f'{address}.csv', index=index)
 
 
 
@@ -1092,7 +1111,7 @@ class SanMin:
             print('Please run .get_feature_selected_data() before re-attempting')
             return
         
-        self.feature_selected_future_data[label].to_csv(address, index=index)
+        self.feature_selected_future_data[label].to_csv(f'{address}.csv', index=index)
 
 
 
