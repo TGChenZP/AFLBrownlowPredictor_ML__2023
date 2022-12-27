@@ -22,6 +22,9 @@ class YiLong:
     def _initialise_objects(self):
         """ Helper to initialise objects """
 
+        self.tuning_result = None
+        self.hyperparameters = None
+
         self.regression_extra_output_columns = ['Train r2', 'Val r2', 'Test r2', 
             'Train RMSE', 'Val RMSE', 'Test RMSE', 'Train MAPE', 'Val MAPE', 'Test MAPE', 'Time']
         self.classification_extra_output_columns = ['Train accu', 'Val accu', 'Test accu', 
@@ -50,11 +53,25 @@ class YiLong:
 
     def read_sorted_full_df(self):
         """ View dataframe sorted in reverse in terms of validation score """
+        
+        if self.tuning_result is None:
+            print('Please run read_tuning_result() first')
+
+        if len(self.tuning_result) < 60:
+            length = len(self.tuning_result)
+        else:
+            length = 60
 
         if self.clf_type =='Regression':
-            display(self.tuning_result.sort_values(['Val r2'], ascending = False))
+            print(f'Highest {length}')
+            display(self.tuning_result.sort_values(['Val r2'], ascending = False).head(length))
+            print(f'Lowest {length}')
+            display(self.tuning_result.sort_values(['Val r2'], ascending = False).tail(length))
         elif self.clf_type =='Classification':
-            display(self.tuning_result.sort_values(['Val accu'], ascending = False))
+            print(f'Highest {length}')
+            display(self.tuning_result.sort_values(['Val accu'], ascending = False).head(length))
+            print(f'Lowest {length}')
+            display(self.tuning_result.sort_values(['Val accu'], ascending = False).tail(length))
 
     
 
@@ -86,3 +103,27 @@ class YiLong:
                 validation_score_df[f'{value}'] = tmp_df_mean
 
             display(validation_score_df)
+    
+
+
+    def read_grouped_scores(self):
+        """ View all evaluation metrics for combinations grouped by containing each individual value of a hyperparameter – for each hyperparameter 
+        If any of the individual values of a hyperparameter exceeds 60, then sample down to 60 without replacement """
+
+        for col in self.hyperparameters: # for each hyperparameter
+
+            print(col)
+
+            hyperparameter_values = list(set(self.tuning_result[col]))
+            hyperparameter_values.sort()
+            
+            # create this temporary dataframe
+            for value in hyperparameter_values: # for each value in the hyperparameter
+                tmp_df = self.tuning_result[self.tuning_result[col] == value] # select df with only those parameter values
+
+                if len(tmp_df) < 60:
+                    length = len(tmp_df)
+                else:
+                    length = 60
+
+                display(tmp_df.sample(length, replace=False))

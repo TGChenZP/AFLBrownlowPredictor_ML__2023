@@ -57,7 +57,7 @@ class JiXi:
         self._pos_neg_combos = None
         self._abs_max = None
         self._new_combos = None
-        self.parameter_value_map_index = None
+        self._parameter_value_map_index = None
 
         self.regression_extra_output_columns = ['Train r2', 'Val r2', 'Test r2', 
             'Train RMSE', 'Val RMSE', 'Test RMSE', 'Train MAPE', 'Val MAPE', 'Test MAPE', 'Time']
@@ -107,6 +107,7 @@ class JiXi:
         """ Input hyperparameter choices """
 
         self.parameter_choices = parameter_choices
+        self._sort_hyperparameter_choices()
 
         self.hyperparameters = list(parameter_choices.keys())
 
@@ -119,6 +120,16 @@ class JiXi:
         self._setup_tuning_result_df()
 
         print("Successfully recorded hyperparameter choices")
+
+
+
+    def _sort_hyperparameter_choices(self):
+        """ Helper to ensure all hyperparameter choice values are in order from lowest to highest """
+
+        for key in self.parameter_choices:
+            tmp = copy.deepcopy(list(self.parameter_choices[key]))
+            tmp.sort()
+            self.parameter_choices[key] = tuple(tmp)
 
 
 
@@ -565,7 +576,7 @@ class JiXi:
         # read DataFrame data into internal governing DataFrames of JiXi
         for row in self.tuning_result.iterrows():
     
-            combo = tuple([self.parameter_value_map_index[hyperparam][row[1][hyperparam]] for hyperparam in self.hyperparameters])
+            combo = tuple([self._parameter_value_map_index[hyperparam][row[1][hyperparam]] for hyperparam in self.hyperparameters])
             
             self.checked[combo] = 1
             
@@ -586,12 +597,12 @@ class JiXi:
     def _create_parameter_value_map_index(self):
         """ Helper to create parameter-value index map """
 
-        self.parameter_value_map_index = dict()
+        self._parameter_value_map_index = dict()
         for key in self.parameter_choices.keys():
             tmp = dict()
             for i in range(len(self.parameter_choices[key])):
                 tmp[self.parameter_choices[key][i]] = i
-            self.parameter_value_map_index[key] = tmp
+            self._parameter_value_map_index[key] = tmp
     
 
 
