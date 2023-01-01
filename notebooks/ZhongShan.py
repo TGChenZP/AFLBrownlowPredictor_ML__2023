@@ -1086,6 +1086,9 @@ class SanMin:
         self.standardiser_objects = copy.deepcopy(zhongshan.standardiser_objects)
         self.final_features = copy.deepcopy(zhongshan.final_features)
         self.retained_columns = copy.deepcopy(zhongshan.retained_columns)
+        self.label_columns = copy.deepcopy(zhongshan.label_columns)
+        self.abs_corr_matrix = copy.deepcopy(zhongshan.abs_corr_matrix)
+        self.NMI_matrix = copy.deepcopy(zhongshan.NMI_matrix)
 
         self.feature_selected_future_data = None
 
@@ -1219,9 +1222,31 @@ class SanMin:
             
             self.feature_selected_future_data[label] = self.future_data[feature_columns]
 
+    
+
+    def view_abs_corr_matrix(self):
+        """ View the absolute correlation matrix """
+
+        if self.abs_corr_matrix is None:
+            print('The ZhongShan object which produced this SanMin did not have run .get_abs_corr()')
+            return
+
+        display(self.abs_corr_matrix)
+
+
+
+    def view_nmi_matrix(self):
+        """ View the NMI matrix """
+
+        if self.NMI_matrix is None:
+            print('The ZhongShan object which produced this SanMin did not have run .get_nmi()')
+            print('Please run .get_nmi() before re-attempting')
+            return
+
+        display(self.NMI_matrix)
+
 
 
     def export_SanMin(self, address):
         with open(f'{address}.pickle', 'wb') as f:
             pickle.dump(self, f)
-            
