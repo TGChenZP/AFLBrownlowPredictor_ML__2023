@@ -286,8 +286,8 @@ class YangZhou:
     def _cruise_warning_threshold(self, max_surrounding_mean, max_surrounding_sd, max_surrounding_n):
         """ Helper that gets the warning threshold by (max - halfwidth) """
 
-        # use 0.99 (one sided test)
-        qt = t.ppf(0.99, max_surrounding_n-1) 
+        # use 0.95 (one sided test)
+        qt = t.ppf(0.95, max_surrounding_n-1) 
         halfwidth = max_surrounding_sd * qt * 1/np.sqrt(max_surrounding_n)
 
         return max_surrounding_mean - halfwidth
@@ -910,7 +910,8 @@ class YangZhou:
         self.checked[combo] = 1
         self.result[combo] = val_score
 
-        print('\tTrained and Tested a Combo')
+        print(f'''\tTrained and Tested a Combo, taking {np.round(time_used, 2)} seconds
+        Current best combo: {self.best_combo} with val score {self.best_score}''')
 
 
 

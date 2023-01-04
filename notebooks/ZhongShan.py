@@ -69,6 +69,39 @@ def create_directories(directories_to_create):
 
 
 
+def setup_project_directory(directories_to_create = ['notebooks', 
+        'scripts', 
+        'plots', 
+        'models', 
+        'data', 
+        'data/raw', 
+        'data/curated', 
+        'presentables',
+        'can_delete']
+    ):
+        """ Function to setup directory for a new project """
+
+        for directory in directories_to_create:
+            if not os.path.exists(f'./{directory}'):
+                os.makedirs(f'./{directory}')
+
+
+
+def create_directories(directories_to_create):
+        """ Function to setup new directory for a new project. 
+        Must write full relative directory! """
+
+        if type(directories_to_create) is list:
+            for directory in directories_to_create:
+                if not os.path.exists(directory):
+                    os.makedirs(directory)
+        
+        elif type(directories_to_create) is str:
+            if not os.path.exists(directory):
+                    os.makedirs(directory)
+
+
+
 class ZhongShan:
 
 
@@ -1074,21 +1107,62 @@ class ZhongShan:
             self.feature_selected_test_data[label].to_csv(f'{address}.csv', index=index)
 
 
+    
+    def export_SanMin_components(self, address):
+        
+        sanmin_components = {
+            "OHE_storage": copy.deepcopy(self.OHE_storage),
+            'pca': copy.deepcopy(self.pca),
+            'final_ncomponents': copy.deepcopy(self.final_ncomponents),
+            'standardiser_objects': copy.deepcopy(self.standardiser_objects),
+            'final_features': copy.deepcopy(self.final_features),
+            'retained_columns': copy.deepcopy(self.retained_columns),
+            'label_columns': copy.deepcopy(self.label_columns),
+            'abs_corr_matrix': copy.deepcopy(self.abs_corr_matrix),
+            'NMI_matrix': copy.deepcopy(self.NMI_matrix),
+        }
+
+        with open(f'{address}.pickle', 'wb') as f:
+            pickle.dump(sanmin_components, f)
+
+
 
 
 
 class SanMin:
 
-    def __init__(self, zhongshan):
-        self.OHE_storage = copy.deepcopy(zhongshan.OHE_storage)
-        self.pca = copy.deepcopy(zhongshan.pca)
-        self.final_ncomponents = copy.deepcopy(zhongshan.final_ncomponents)
-        self.standardiser_objects = copy.deepcopy(zhongshan.standardiser_objects)
-        self.final_features = copy.deepcopy(zhongshan.final_features)
-        self.retained_columns = copy.deepcopy(zhongshan.retained_columns)
-        self.label_columns = copy.deepcopy(zhongshan.label_columns)
-        self.abs_corr_matrix = copy.deepcopy(zhongshan.abs_corr_matrix)
-        self.NMI_matrix = copy.deepcopy(zhongshan.NMI_matrix)
+    def __init__(self, input, input_type):
+        
+        if input_type not in ('ZhongShan', 'Components'):
+            print('input_type must be either "ZhongShan" or "Components"')
+            return 
+
+        if input_type == 'ZhongShan':
+            self.OHE_storage = copy.deepcopy(input.OHE_storage)
+            self.pca = copy.deepcopy(input.pca)
+            self.final_ncomponents = copy.deepcopy(input.final_ncomponents)
+            self.standardiser_objects = copy.deepcopy(input.standardiser_objects)
+            self.final_features = copy.deepcopy(input.final_features)
+            self.retained_columns = copy.deepcopy(input.retained_columns)
+            self.label_columns = copy.deepcopy(input.label_columns)
+            self.abs_corr_matrix = copy.deepcopy(input.abs_corr_matrix)
+            self.NMI_matrix = copy.deepcopy(input.NMI_matrix)
+            
+        elif input_type == 'Components':
+
+            with open(f'{input}', 'rb') as f:
+                sanmin_components = pickle.load(f)
+            
+            self.OHE_storage = sanmin_components['OHE_storage']
+            self.pca = sanmin_components['OHE_storage']
+            self.final_ncomponents = sanmin_components['final_ncomponents']
+            self.standardiser_objects = sanmin_components['standardiser_objects']
+            self.final_features = sanmin_components['final_features']
+            self.retained_columns = sanmin_components['retained_columns']
+            self.label_columns = sanmin_components['label_columns']
+            self.abs_corr_matrix = sanmin_components['abs_corr_matrix']
+            self.NMI_matrix = sanmin_components['NMI_matrix']
+        
 
         self.feature_selected_future_data = None
 
