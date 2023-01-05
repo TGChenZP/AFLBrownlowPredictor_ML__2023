@@ -57,7 +57,7 @@ class JiXi:
         self._pos_neg_combos = None
         self._abs_max = None
         self._new_combos = None
-        self._parameter_value_map_index = None
+        self.parameter_value_map_index = None
 
         self.regression_extra_output_columns = ['Train r2', 'Val r2', 'Test r2', 
             'Train RMSE', 'Val RMSE', 'Test RMSE', 'Train MAPE', 'Val MAPE', 'Test MAPE', 'Time']
@@ -548,7 +548,9 @@ class JiXi:
     def _save_tuning_result(self):
         """ Helper to export tuning result csv """
 
-        self.tuning_result.to_csv(f'{self.tuning_result_saving_address}.csv', index=False)
+        tuning_result_saving_address_strip = self.tuning_result_saving_address.split('.csv')[0]
+
+        self.tuning_result.to_csv(f'{tuning_result_saving_address_strip}.csv', index=False)
 
 
     
@@ -576,7 +578,7 @@ class JiXi:
         # read DataFrame data into internal governing DataFrames of JiXi
         for row in self.tuning_result.iterrows():
     
-            combo = tuple([self._parameter_value_map_index[hyperparam][row[1][hyperparam]] for hyperparam in self.hyperparameters])
+            combo = tuple([self.parameter_value_map_index[hyperparam][row[1][hyperparam]] for hyperparam in self.hyperparameters])
             
             self.checked[combo] = 1
             
@@ -597,12 +599,12 @@ class JiXi:
     def _create_parameter_value_map_index(self):
         """ Helper to create parameter-value index map """
 
-        self._parameter_value_map_index = dict()
+        self.parameter_value_map_index = dict()
         for key in self.parameter_choices.keys():
             tmp = dict()
             for i in range(len(self.parameter_choices[key])):
                 tmp[self.parameter_choices[key][i]] = i
-            self._parameter_value_map_index[key] = tmp
+            self.parameter_value_map_index[key] = tmp
     
 
 
@@ -639,7 +641,8 @@ class JiXi:
         object_save._up_to = 0
 
         # Export
-        with open(f'{self.object_saving_address}.pickle', 'wb') as f:
+        object_saving_address_strip = self.object_saving_address.split('.pickle')[0]
+        with open(f'{object_saving_address_strip}.pickle', 'wb') as f:
             pickle.dump(object_save, f)
 
         print(f'Successfully exported JiXi object as {self.object_saving_address}')

@@ -102,6 +102,39 @@ def create_directories(directories_to_create):
 
 
 
+def setup_project_directory(directories_to_create = ['notebooks', 
+        'scripts', 
+        'plots', 
+        'models', 
+        'data', 
+        'data/raw', 
+        'data/curated', 
+        'presentables',
+        'can_delete']
+    ):
+        """ Function to setup directory for a new project """
+
+        for directory in directories_to_create:
+            if not os.path.exists(f'./{directory}'):
+                os.makedirs(f'./{directory}')
+
+
+
+def create_directories(directories_to_create):
+        """ Function to setup new directory for a new project. 
+        Must write full relative directory! """
+
+        if type(directories_to_create) is list:
+            for directory in directories_to_create:
+                if not os.path.exists(directory):
+                    os.makedirs(directory)
+        
+        elif type(directories_to_create) is str:
+            if not os.path.exists(directory):
+                    os.makedirs(directory)
+
+
+
 class ZhongShan:
 
 
@@ -1004,13 +1037,13 @@ class ZhongShan:
                 print("Plot does not exist - create it using various functions before re-attempting")
                 return
 
-            self.cont_scatter_plot[f'{feature}:{label}'].savefig(address)
+            self.cont_scatter_plot[f'{feature}:{label}.png'].savefig(address)
         else:
             if f'{feature}:{label}' not in self.cat_scatter_plot:
                 print("Plot does not exist - create it using various functions before re-attempting")
                 return
 
-            self.cat_scatter_plot[f'{feature}:{label}'].savefig(address)
+            self.cat_scatter_plot[f'{feature}:{label}.png'].savefig(address)
 
         print("Plot saved successfully")
 
@@ -1094,22 +1127,25 @@ class ZhongShan:
             print('Please run .get_feature_selected_data() before re-attempting')
             return
 
+        address_split = address.split('.csv')[0]
+
         if df_name == "Full":
-            self.feature_selected_full_data[label].to_csv(f'{address}.csv', index=index)
+            self.feature_selected_full_data[label].to_csv(f'{address_split}.csv', index=index)
         
         elif df_name == "Train":
-            self.feature_selected_train_data[label].to_csv(f'{address}.csv', index=index)
+            self.feature_selected_train_data[label].to_csv(f'{address_split}.csv', index=index)
 
         elif df_name == "Validate":
-            self.feature_selected_val_data[label].to_csv(f'{address}.csv', index=index)
+            self.feature_selected_val_data[label].to_csv(f'{address_split}.csv', index=index)
 
         elif df_name == "Test":
-            self.feature_selected_test_data[label].to_csv(f'{address}.csv', index=index)
+            self.feature_selected_test_data[label].to_csv(f'{address_split}.csv', index=index)
 
 
     
     def export_SanMin_components(self, address):
-        
+        """ Export Components of Sanmin as a dictionary in a pickle """
+
         sanmin_components = {
             "OHE_storage": copy.deepcopy(self.OHE_storage),
             'pca': copy.deepcopy(self.pca),
@@ -1121,6 +1157,8 @@ class ZhongShan:
             'abs_corr_matrix': copy.deepcopy(self.abs_corr_matrix),
             'NMI_matrix': copy.deepcopy(self.NMI_matrix),
         }
+
+        address_split = address.split('.pickle')[0]
 
         with open(f'{address}.pickle', 'wb') as f:
             pickle.dump(sanmin_components, f)
@@ -1188,7 +1226,9 @@ class SanMin:
             print('Please run .get_feature_selected_data() before re-attempting')
             return
         
-        self.feature_selected_future_data[label].to_csv(f'{address}.csv', index=index)
+        address_split = address.split('.csv')[0]
+        
+        self.feature_selected_future_data[label].to_csv(f'{address_split}.csv', index=index)
 
 
 
@@ -1322,5 +1362,9 @@ class SanMin:
 
 
     def export_SanMin(self, address):
-        with open(f'{address}.pickle', 'wb') as f:
+        """ Exports SanMin object """
+    
+        address_split = address.split('.pickle')[0]
+
+        with open(f'{address_split}.pickle', 'wb') as f:
             pickle.dump(self, f)

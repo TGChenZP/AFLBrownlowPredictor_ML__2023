@@ -106,7 +106,6 @@ class JiaoCheng:
                     curr_combo_score += curr_added_value
                     feature_combos_with_score.append((copy.deepcopy(curr_combo), curr_combo_score))
 
-
         # Remove duplicates and sort
         feature_combos_with_score = self._features_duplicate_removal(feature_combos_with_score)
         feature_combos_with_score.sort(key = lambda x: x[1])
@@ -123,8 +122,9 @@ class JiaoCheng:
             json_output = {'feature_combos_with_score': feature_combos_with_score, 
                             'feature_combo': feature_combo, 
                             'feature_combo_scores': feature_combo_scores}
-                            
-            with open(export_address, 'w') as f:
+            
+            export_address_strip = export_address.split('.json')[0]
+            with open(f'{export_address_strip}.json', 'w') as f:
                 json.dump(json_output, f, indent=2) 
             print("Export Completed")
     

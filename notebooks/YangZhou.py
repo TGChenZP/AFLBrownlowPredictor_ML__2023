@@ -320,7 +320,7 @@ class YangZhou:
                    
                     print(f"Cruise suspended due to suspicious case")
                     
-                    return
+                    return cruise_combo
 
 
         # if reach here then all cruise indicies checked. can safely say end cruise
@@ -713,9 +713,6 @@ class YangZhou:
 
         # print information of this round 
 
-        print('Max Accuracy From This Guidance Round: \n', self.best_score)
-        print('Max Combo From This Guidance Round: \n', self.best_combo)
-
         print('% Combos Checked Thus Far:', int(sum(self.checked.reshape((np.prod(self.n_items))))), 'out of', np.prod(self.n_items), 'which is', f'{np.mean(self.checked).round(8)*100}%')
 
 
@@ -758,7 +755,7 @@ class YangZhou:
                 print(f'\tAlready Trained and Tested combination {combo}')
         
 
-        # SECOND: from the best combo, begin guidance system
+        # SECOND: from the core combo, begin guidance system
         self._surrounding_vectors = self._get_surrounding_vectors(self._core)
 
         print('\n')
@@ -772,10 +769,10 @@ class YangZhou:
         print("STAGE TWO: Begin Cruise system\n\n")
         self._cruising = True
         while self._cruising:
-            self._CruiseSystem()
+            suspicious_case_combo = self._CruiseSystem()
 
             if self._cruising:
-                self._GuidanceSystem(self.best_combo)
+                self._GuidanceSystem(tuple(suspicious_case_combo))
                 self._restarts += 1
 
         # FINALLY: Final extensive guidance search around maxes.
@@ -794,12 +791,7 @@ class YangZhou:
         # Display final information
         print("TUNING FINISHED\n")
 
-        # if len(self.hyperparameters) == 2:
-        #     print('Final Found: \n', self.result.round(4), '\n')
-        #     print('Final Checked Combos: \n', self.checked.round(4), '\n')
-        #     print('Final Checked Cores: \n', self.checked_core.round(4), '\n')
-
-        print('Max Accuracy: \n', self.best_score)
+        print('Max Score: \n', self.best_score)
         print('Max Combo: \n', self.best_combo)
 
         print('% Combos Checked:', int(sum(self.checked.reshape((np.prod(self.n_items))))), 'out of', np.prod(self.n_items), 'which is', f'{np.mean(self.checked).round(8)*100}%')
@@ -911,14 +903,16 @@ class YangZhou:
         self.result[combo] = val_score
 
         print(f'''\tTrained and Tested a Combo, taking {np.round(time_used, 2)} seconds
-        Current best combo: {self.best_combo} with val score {self.best_score}''')
+            Current best combo: {self.best_combo} with val score {self.best_score}''')
 
 
 
     def _save_tuning_result(self):
         """ Helper to export tuning result csv """
 
-        self.tuning_result.to_csv(f'{self.tuning_result_saving_address}.csv', index=False)
+        tuning_result_saving_address_split = self.tuning_result_saving_address.split('.csv')[0]
+
+        self.tuning_result.to_csv(f'{self.tuning_result_saving_address_split}.csv', index=False)
 
     
 
@@ -1008,7 +1002,9 @@ class YangZhou:
         object_save.test_y = None
 
         # Export
-        with open(f'{self.object_saving_address}.pickle', 'wb') as f:
+        object_saving_address_split = self.object_saving_address.split('.pickle')[0]
+
+        with open(f'{object_saving_address_split}.pickle', 'wb') as f:
             pickle.dump(object_save, f)
 
         print(f'Successfully exported YangZhou object as {self.object_saving_address}')
