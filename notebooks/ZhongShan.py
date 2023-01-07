@@ -17,25 +17,6 @@ from sklearn.preprocessing import StandardScaler
 
 
 
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-import os
-import copy
-import pickle
-
-from sklearn.metrics import normalized_mutual_info_score as NMI
-from itertools import combinations 
-from sklearn.preprocessing import OneHotEncoder
-from sklearn.model_selection import train_test_split
-from sklearn.decomposition import PCA
-from sklearn.preprocessing import StandardScaler
-
-
-
-
-
 def setup_project_directory(directories_to_create = ['notebooks', 
         'scripts', 
         'plots', 
@@ -66,72 +47,6 @@ def create_directories(directories_to_create):
         elif type(directories_to_create) is str:
             if not os.path.exists(directories_to_create):
                     os.makedirs(directories_to_create)
-
-
-
-def setup_project_directory(directories_to_create = ['notebooks', 
-        'scripts', 
-        'plots', 
-        'models', 
-        'data', 
-        'data/raw', 
-        'data/curated', 
-        'presentables',
-        'can_delete']
-    ):
-        """ Function to setup directory for a new project """
-
-        for directory in directories_to_create:
-            if not os.path.exists(f'./{directory}'):
-                os.makedirs(f'./{directory}')
-
-
-
-def create_directories(directories_to_create):
-        """ Function to setup new directory for a new project. 
-        Must write full relative directory! """
-
-        if type(directories_to_create) is list:
-            for directory in directories_to_create:
-                if not os.path.exists(directory):
-                    os.makedirs(directory)
-        
-        elif type(directories_to_create) is str:
-            if not os.path.exists(directory):
-                    os.makedirs(directory)
-
-
-
-def setup_project_directory(directories_to_create = ['notebooks', 
-        'scripts', 
-        'plots', 
-        'models', 
-        'data', 
-        'data/raw', 
-        'data/curated', 
-        'presentables',
-        'can_delete']
-    ):
-        """ Function to setup directory for a new project """
-
-        for directory in directories_to_create:
-            if not os.path.exists(f'./{directory}'):
-                os.makedirs(f'./{directory}')
-
-
-
-def create_directories(directories_to_create):
-        """ Function to setup new directory for a new project. 
-        Must write full relative directory! """
-
-        if type(directories_to_create) is list:
-            for directory in directories_to_create:
-                if not os.path.exists(directory):
-                    os.makedirs(directory)
-        
-        elif type(directories_to_create) is str:
-            if not os.path.exists(directory):
-                    os.makedirs(directory)
 
 
 
