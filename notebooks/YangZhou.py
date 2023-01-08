@@ -1,3 +1,5 @@
+# 08/01/2023
+
 import pandas as pd
 import numpy as np
 import statistics as s
@@ -742,6 +744,7 @@ class YangZhou:
         first_round_combinations = copy.deepcopy(self._cruise_combinations)
         first_round_combinations.append(self._core) 
 
+        random.seed(self._seed)
         random.shuffle(first_round_combinations)
 
         print("STAGE ZERO: Tune all Cruise combinations\n\n")
@@ -850,7 +853,7 @@ class YangZhou:
 
         
         elif self.clf_type == 'Classification':
-            train_score = accuracy_score(self.train_y, train_pred)
+            train_score = clf.score(self.train_y, train_pred)
             val_score = clf.score(self.val_y, val_pred)
             test_score = clf.score(self.test_y, test_pred)
 
@@ -912,7 +915,7 @@ class YangZhou:
 
         tuning_result_saving_address_split = self.tuning_result_saving_address.split('.csv')[0]
 
-        self.tuning_result.to_csv(f'{self.tuning_result_saving_address_split}.csv', index=False)
+        self.tuning_result.to_csv(f'{tuning_result_saving_address_split}.csv', index=False)
 
     
 

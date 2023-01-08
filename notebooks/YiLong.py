@@ -1,4 +1,7 @@
+# 08/01/2023
+
 import pandas as pd
+import copy
 
 
 
@@ -11,7 +14,7 @@ class YiLong:
     def __init__(self, type):
         
         # check correct input
-        assert type == 'Classification' or type == 'Regression'
+        assert type == 'Classification' or type == 'Regression' or 'GLM Regression'
 
         self.clf_type = type
         self._initialise_objects() # Initialise objects
@@ -24,19 +27,27 @@ class YiLong:
 
         self.tuning_result = None
         self.hyperparameters = None
+        self._seed = 18861201
 
         self.regression_extra_output_columns = ['Train r2', 'Val r2', 'Test r2', 
             'Train RMSE', 'Val RMSE', 'Test RMSE', 'Train MAPE', 'Val MAPE', 'Test MAPE', 'Time']
         self.classification_extra_output_columns = ['Train accu', 'Val accu', 'Test accu', 
             'Train balanced_accu', 'Val balanced_accu', 'Test balanced_accu', 'Train f1', 'Val f1', 'Test f1', 
             'Train precision', 'Val precision', 'Test precision', 'Train recall', 'Val recall', 'Test recall', 'Time']
+        self.GLM_Regression_extra_output_columns = ['Train deviance', 'Val deviance', 'Test deviance', 'Time']
+
+        self.discard_columns = None
+
         self.tuning_result = None
         self.hyperparameters = None
 
     
 
-    def read_tuning_result(self, address):
+    def read_tuning_result(self, address, extra_to_discard_columns = None):
         """ Read in Tuning Result """
+
+        if extra_to_discard_columns is not None:
+            assert type(extra_to_discard_columns) == list
 
         self.tuning_result = pd.read_csv(address)
 
@@ -44,36 +55,94 @@ class YiLong:
 
         # get list of hyperparameters by taking what is not in the extra_output_columns
         if self.clf_type == 'Classification':
-            self.hyperparameters = [col for col in self.tuning_result.columns if col not in self.classification_extra_output_columns]
+            self.discard_columns = copy.deepcopy(self.classification_extra_output_columns)
+            
+            if extra_to_discard_columns is not None:
+                self.discard_columns.append(extra_to_discard_columns)
+
 
         elif self.clf_type == 'Regression':
-            self.hyperparameters = [col for col in self.tuning_result.columns if col not in self.regression_extra_output_columns]
+            self.discard_columns = copy.deepcopy(self.regression_extra_output_columns)
+            
+            if extra_to_discard_columns is not None:
+                self.discard_columns.append(extra_to_discard_columns)
+
+
+        elif self.clf_type == 'GLM Regression':
+            self.discard_columns = copy.deepcopy(self.GLM_Regression_extra_output_columns)
+            
+            if extra_to_discard_columns is not None:
+                self.discard_columns.append(extra_to_discard_columns)
+
+        self.hyperparameters = [col for col in self.tuning_result.columns if col not in self.discard_columns]
 
 
 
-    def read_sorted_full_df(self):
+    def read_sorted_full_df(self, interested_statistic = None, ascending = False):
         """ View dataframe sorted in reverse in terms of validation score """
         
+        assert type(ascending) == bool
+
         if self.tuning_result is None:
             print('Please run read_tuning_result() first')
+            return
+        
+        if interested_statistic is not None:
+            if self.clf_type == 'Regression':
+                if interested_statistic not in self.regression_extra_output_columns:
+                    print('Statistic not valid for a Regression Model')
+                    return
+
+            elif self.clf_type == 'Classification':
+                if interested_statistic not in self.classification_extra_output_columns:
+                    print('Statistic not valid for a Classification Model')
+                    return
+            
+            elif self.clf_type == 'GLM Regression':
+                if interested_statistic not in self.GLM_Regression_extra_output_columns:
+                    print('Statistic not valid for a GLM Regression Model')
+                    return
+        
+        
 
         if len(self.tuning_result) < 60:
             length = len(self.tuning_result)
         else:
             length = 60
 
-        if self.clf_type =='Regression':
-            print(f'Highest {length}')
-            display(self.tuning_result.sort_values(['Val r2'], ascending = False).head(length))
-            print(f'Lowest {length}')
-            display(self.tuning_result.sort_values(['Val r2'], ascending = False).tail(length))
-        elif self.clf_type =='Classification':
-            print(f'Highest {length}')
-            display(self.tuning_result.sort_values(['Val accu'], ascending = False).head(length))
-            print(f'Lowest {length}')
-            display(self.tuning_result.sort_values(['Val accu'], ascending = False).tail(length))
 
-    
+        if self.clf_type =='Regression':
+            if interested_statistic == None:
+                interested_statistic = 'Val r2'
+
+            sorted_tuning_results = self.tuning_result.sort_values([interested_statistic], ascending = ascending)
+
+        elif self.clf_type =='Classification':
+            if interested_statistic == None:
+                interested_statistic = 'Val accu'
+            
+            sorted_tuning_results = self.tuning_result.sort_values([interested_statistic], ascending = ascending)
+        
+        elif self.clf_type =='GLM Regression':
+            if interested_statistic == None:
+                interested_statistic = 'Val deviance'
+            
+            sorted_tuning_results = self.tuning_result.sort_values([interested_statistic], ascending = ascending)
+
+
+        sorted_tuning_results.index = range(len(sorted_tuning_results))
+        best_hyperparameter_combination = {hyperparameter:sorted_tuning_results.iloc[0][hyperparameter] for hyperparameter in self.hyperparameters}
+        print('Best hyperameter combination:', best_hyperparameter_combination, '\n')
+
+        print(f'Highest {length}')
+        display(sorted_tuning_results.head(length))
+        print(f'Lowest {length}')
+        display(sorted_tuning_results.tail(length))
+
+
+        return best_hyperparameter_combination 
+
+
 
     def read_mean_val_scores(self):
         """ View the means of evaluation metrics for combinations containing each individual value of a hyperparameter – for each hyperparameter """
@@ -95,6 +164,8 @@ class YiLong:
                     tmp_df_mean = tmp_df[self.classification_extra_output_columns[:-1]].mean().T
                 elif self.clf_type == 'Regression':
                     tmp_df_mean = tmp_df[self.regression_extra_output_columns[:-1]].mean().T
+                elif self.clf_type == 'GLM Regression':
+                    tmp_df_mean = tmp_df[self.GLM_Regression_extra_output_columns[:-1]].mean().T
 
                 # get number of observations in this group
                 tmp_df_mean['n'] = len(tmp_df)
@@ -126,4 +197,4 @@ class YiLong:
                 else:
                     length = 60
 
-                display(tmp_df.sample(length, replace=False))
+                display(tmp_df.sample(length, replace=False, random_state=self._seed))

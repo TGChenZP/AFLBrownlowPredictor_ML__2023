@@ -1,3 +1,5 @@
+# 08/01/2023
+
 import pandas as pd
 import copy
 import time
@@ -487,7 +489,7 @@ class JiXi:
 
         
         elif self.clf_type == 'Classification':
-            train_score = accuracy_score(self.train_y, train_pred)
+            train_score = clf.score(self.train_y, train_pred)
             val_score = clf.score(self.val_y, val_pred)
             test_score = clf.score(self.test_y, test_pred)
 

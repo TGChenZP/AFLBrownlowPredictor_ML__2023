@@ -1,3 +1,5 @@
+# 08/01/2023
+
 from ZhongShan import *
 import pickle
 import copy
@@ -12,15 +14,18 @@ class JiaoCheng:
 
     def __init__(self, sanmin):
         """ Initialise class """
-        self.sanmin = sanmin
+    
         self._initialise_objects()
+        self.sanmin = sanmin
 
         print('JiaoCheng Initialised')
 
 
 
     def _initialise_objects(self):
-        pass
+        
+        self._seed = 19210216
+        self.sanmin = None
     
 
     
