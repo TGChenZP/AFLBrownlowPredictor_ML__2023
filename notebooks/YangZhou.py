@@ -1,4 +1,4 @@
-# 08/01/2023
+# 11/01/2023
 
 import pandas as pd
 import numpy as np
@@ -853,9 +853,9 @@ class YangZhou:
 
         
         elif self.clf_type == 'Classification':
-            train_score = clf.score(self.train_y, train_pred)
-            val_score = clf.score(self.val_y, val_pred)
-            test_score = clf.score(self.test_y, test_pred)
+            train_score = accuracy_score(self.train_y, train_pred)
+            val_score = accuracy_score(self.val_y, val_pred)
+            test_score = accuracy_score(self.test_y, test_pred)
 
             train_bal_accu = balanced_accuracy_score(self.train_y, train_pred)
             val_bal_accu = balanced_accuracy_score(self.val_y, val_pred)

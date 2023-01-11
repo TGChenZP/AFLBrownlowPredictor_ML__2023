@@ -1,4 +1,4 @@
-# 08/01/2023
+# 10/01/2023
 
 import pandas as pd
 import numpy as np
@@ -949,18 +949,20 @@ class ZhongShan:
     def export_plot(self, scatter_type, feature, label, address):
         """ save plots """
         
+        address_split = address.split('.png')[0]
+
         if scatter_type == 'continuous':
             if f'{feature}:{label}' not in self.cont_scatter_plot:
                 print("Plot does not exist - create it using various functions before re-attempting")
                 return
 
-            self.cont_scatter_plot[f'{feature}:{label}.png'].savefig(address)
+            self.cont_scatter_plot[f'{feature}:{label}.png'].savefig(f'{address_split}.png')
         else:
             if f'{feature}:{label}' not in self.cat_scatter_plot:
                 print("Plot does not exist - create it using various functions before re-attempting")
                 return
 
-            self.cat_scatter_plot[f'{feature}:{label}.png'].savefig(address)
+            self.cat_scatter_plot[f'{feature}:{label}.png'].savefig(f'{address_split}.png')
 
         print("Plot saved successfully")
 
