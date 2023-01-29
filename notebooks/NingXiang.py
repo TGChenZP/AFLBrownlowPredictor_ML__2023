@@ -1,4 +1,4 @@
-# 08/01/2023
+# 28/01/2023
 
 from ZhongShan import *
 import pickle
@@ -10,7 +10,7 @@ import json
 
 
 
-class JiaoCheng:
+class NingXiang:
 
     def __init__(self, sanmin):
         """ Initialise class """
@@ -18,19 +18,19 @@ class JiaoCheng:
         self._initialise_objects()
         self.sanmin = sanmin
 
-        print('JiaoCheng Initialised')
+        print('NingXiang Initialised')
 
 
 
     def _initialise_objects(self):
         
-        self._seed = 19210216
+        self._seed = 18981124
         self.sanmin = None
     
 
     
     def get_feature_combinations(self, score_type, label, penalty_function_type, export_address = None):
-        """ Function that gets combinations based on JiaoCheng's algorithm along with its score, based on
+        """ Function that gets combinations based on NingXiang's algorithm along with its score, based on
         inputted score type, label and penalty function type. Has option to export"""
 
         if score_type not in ('NMI', 'Abs Corr'):
