@@ -1,4 +1,4 @@
-# 11/01/2023
+# 13/02/2023
 
 import pandas as pd
 import numpy as np
@@ -161,6 +161,15 @@ class YangZhou:
             tune_result_columns.extend(self.regression_extra_output_columns)
 
         self.tuning_result = pd.DataFrame({col:list() for col in tune_result_columns})
+
+
+
+    def set_non_tunable_hyperparameters(self, non_tunable_hyperparameter_choices):
+        """ Input Non tunable hyperparameter choices """
+
+        self.non_tunable_parameter_choices = non_tunable_hyperparameter_choices
+
+        print("Successfully recorded non_tunable_hyperparameter choices")
 
 
 
@@ -719,7 +728,7 @@ class YangZhou:
 
 
 
-    def tune(self):
+    def tune(self, key_stats_only = False):
         """ Begin tuning """
 
         if self.train_x is None or self.train_y is None or self.val_x is None or self.val_y is None or self.test_x is None or self.test_y is None:
@@ -733,7 +742,7 @@ class YangZhou:
         if self.tuning_result_saving_address is None:
             print("Missing tuning result csv saving address, please run ._save_tuning_result() first")
 
-
+        self.key_stats_only = key_stats_only
 
         print("BEGIN TUNING\n\n") 
         
@@ -807,7 +816,9 @@ class YangZhou:
         combo = tuple(combo)
         
         params = {self.hyperparameters[i]:self.parameter_choices[self.hyperparameters[i]][combo[i]] for i in range(len(self.hyperparameters))}
-
+        for nthp in self.non_tunable_parameter_choices:
+            params[nthp] = self.non_tunable_parameter_choices[nthp]
+            
         # initialise object
         clf = self.model(**params)
 
@@ -828,69 +839,154 @@ class YangZhou:
         df_building_dict = params
 
         if self.clf_type == 'Regression':
-            train_score = r2_score(self.train_y, train_pred)
-            val_score = r2_score(self.val_y, val_pred)
-            test_score = r2_score(self.test_y, test_pred)
 
-            train_rmse = np.sqrt(mean_squared_error(self.train_y, train_pred))
-            val_rmse = np.sqrt(mean_squared_error(self.val_y, val_pred))
-            test_rmse = np.sqrt(mean_squared_error(self.test_y, test_pred))
+            train_score = val_score = test_score = train_rmse = val_rmse = test_rmse = train_mape = val_mape = test_mape = 0
 
-            train_mape = mean_absolute_percentage_error(self.train_y, train_pred)
-            val_mape = mean_absolute_percentage_error(self.val_y, val_pred)
-            test_mape = mean_absolute_percentage_error(self.test_y, test_pred)
+            try:
+                train_score = r2_score(self.train_y, train_pred)
+            except:
+                pass
+            try:
+                val_score = r2_score(self.val_y, val_pred)
+            except:
+                pass
+            try:
+                test_score = r2_score(self.test_y, test_pred)
+            except:
+                pass
+            
+            try:
+                train_rmse = np.sqrt(mean_squared_error(self.train_y, train_pred))
+            except:
+                pass
+            try:
+                val_rmse = np.sqrt(mean_squared_error(self.val_y, val_pred))
+            except:
+                pass
+            try:
+                test_rmse = np.sqrt(mean_squared_error(self.test_y, test_pred))
+            except:
+                pass
 
-            df_building_dict['Train r2'] = [np.round(train_score, 4)]
-            df_building_dict['Val r2'] = [np.round(val_score, 4)]
-            df_building_dict['Test r2'] = [np.round(test_score, 4)]
-            df_building_dict['Train RMSE'] = [np.round(train_rmse, 4)]
-            df_building_dict['Val RMSE'] = [np.round(val_rmse, 4)]
-            df_building_dict['Test RMSE'] = [np.round(test_rmse, 4)]
-            df_building_dict['Train MAPE'] = [np.round(train_mape, 4)]
-            df_building_dict['Val MAPE'] = [np.round(val_mape, 4)]
-            df_building_dict['Test MAPE'] = [np.round(test_mape, 4)]
-            df_building_dict['Time'] = [np.round(time_used, 2)]
+            if self.key_stats_only == False:
+                try:
+                    train_mape = mean_absolute_percentage_error(self.train_y, train_pred)
+                except:
+                    pass
+                try:
+                    val_mape = mean_absolute_percentage_error(self.val_y, val_pred)
+                except:
+                    pass
+                try:
+                    test_mape = mean_absolute_percentage_error(self.test_y, test_pred)
+                except:
+                    pass
+            
+            df_building_dict['Train r2'] = [np.round(train_score, 6)]
+            df_building_dict['Val r2'] = [np.round(val_score, 6)]
+            df_building_dict['Test r2'] = [np.round(test_score, 6)]
+            df_building_dict['Train RMSE'] = [np.round(train_rmse, 6)]
+            df_building_dict['Val RMSE'] = [np.round(val_rmse, 6)]
+            df_building_dict['Test RMSE'] = [np.round(test_rmse, 6)]
+            
+            if self.key_stats_only == False:
+                df_building_dict['Train MAPE'] = [np.round(train_mape, 6)]
+                df_building_dict['Val MAPE'] = [np.round(val_mape, 6)]
+                df_building_dict['Test MAPE'] = [np.round(test_mape, 6)]
 
         
         elif self.clf_type == 'Classification':
-            train_score = accuracy_score(self.train_y, train_pred)
-            val_score = accuracy_score(self.val_y, val_pred)
-            test_score = accuracy_score(self.test_y, test_pred)
 
-            train_bal_accu = balanced_accuracy_score(self.train_y, train_pred)
-            val_bal_accu = balanced_accuracy_score(self.val_y, val_pred)
-            test_bal_accu = balanced_accuracy_score(self.test_y, test_pred)
+            train_score = val_score = test_score = train_bal_accu = val_bal_accu = test_bal_accu = train_f1 = val_f1 = test_f1 = \
+                train_precision = val_precision = test_precision = train_recall = val_recall = test_recall = 0
 
-            train_f1 = f1_score(self.train_y, train_pred, average='weighted')
-            val_f1 = f1_score(self.val_y, val_pred, average='weighted')
-            test_f1 = f1_score(self.test_y, test_pred, average='weighted')
+            try:    
+                train_score = accuracy_score(self.train_y, train_pred)
+            except:
+                pass
+            try:
+                val_score = accuracy_score(self.val_y, val_pred)
+            except:
+                pass
+            try:
+                test_score = accuracy_score(self.test_y, test_pred)
+            except:
+                pass
 
-            train_precision = precision_score(self.train_y, train_pred, average='weighted')
-            val_precision = precision_score(self.val_y, val_pred, average='weighted')
-            test_precision = precision_score(self.test_y, test_pred, average='weighted')
-        
-            train_recall = recall_score(self.train_y, train_pred, average='weighted')
-            val_recall = recall_score(self.val_y, val_pred, average='weighted')
-            test_recall = recall_score(self.test_y, test_pred, average='weighted')
+            try:
+                train_bal_accu = balanced_accuracy_score(self.train_y, train_pred)
+            except:
+                pass
+            try:
+                val_bal_accu = balanced_accuracy_score(self.val_y, val_pred)
+            except:
+                pass
+            try:
+                test_bal_accu = balanced_accuracy_score(self.test_y, test_pred)
+            except:
+                pass
+            
+            try:
+                train_f1 = f1_score(self.train_y, train_pred, average='weighted')
+            except:
+                pass
+            try:
+                val_f1 = f1_score(self.val_y, val_pred, average='weighted')
+            except:
+                pass
+            try:
+                test_f1 = f1_score(self.test_y, test_pred, average='weighted')
+            except:
+                pass
+            
+            try:
+                train_precision = precision_score(self.train_y, train_pred, average='weighted')
+            except:
+                pass
+            try:
+                val_precision = precision_score(self.val_y, val_pred, average='weighted')
+            except:
+                pass
+            try:
+                test_precision = precision_score(self.test_y, test_pred, average='weighted')
+            except:
+                pass
 
-            df_building_dict['Train accu'] = [np.round(train_score, 4)]
-            df_building_dict['Val accu'] = [np.round(val_score, 4)]
-            df_building_dict['Test accu'] = [np.round(test_score, 4)]
-            df_building_dict['Train balanced_accuracy'] = [np.round(train_bal_accu, 4)]
-            df_building_dict['Val balanced_accuracy'] = [np.round(val_bal_accu, 4)]
-            df_building_dict['Test balanced_accuracy'] = [np.round(test_bal_accu, 4)]
-            df_building_dict['Train f1'] = [np.round(train_f1, 4)]
-            df_building_dict['Val f1'] = [np.round(val_f1, 4)]
-            df_building_dict['Test f1'] = [np.round(test_f1, 4)]
-            df_building_dict['Train precision'] = [np.round(train_precision, 4)]
-            df_building_dict['Val precision'] = [np.round(val_precision, 4)]
-            df_building_dict['Test precision'] = [np.round(test_precision, 4)]
-            df_building_dict['Train recall'] = [np.round(train_recall, 4)]
-            df_building_dict['Val recall'] = [np.round(val_recall, 4)]
-            df_building_dict['Test recall'] = [np.round(test_recall, 4)]
-            df_building_dict['Time'] = [np.round(time_used, 2)]
+            try:
+                train_recall = recall_score(self.train_y, train_pred, average='weighted')
+            except:
+                pass
+            try:
+                val_recall = recall_score(self.val_y, val_pred, average='weighted')
+            except:
+                pass
+            try:
+                test_recall = recall_score(self.test_y, test_pred, average='weighted')
+            except:
+                pass
+
+            df_building_dict['Train accu'] = [np.round(train_score, 6)]
+            df_building_dict['Val accu'] = [np.round(val_score, 6)]
+            df_building_dict['Test accu'] = [np.round(test_score, 6)]
+            df_building_dict['Train balanced_accuracy'] = [np.round(train_bal_accu, 6)]
+            df_building_dict['Val balanced_accuracy'] = [np.round(val_bal_accu, 6)]
+            df_building_dict['Test balanced_accuracy'] = [np.round(test_bal_accu, 6)]
+            df_building_dict['Train f1'] = [np.round(train_f1, 6)]
+            df_building_dict['Val f1'] = [np.round(val_f1, 6)]
+            df_building_dict['Test f1'] = [np.round(test_f1, 6)]
+            df_building_dict['Train precision'] = [np.round(train_precision, 6)]
+            df_building_dict['Val precision'] = [np.round(val_precision, 6)]
+            df_building_dict['Test precision'] = [np.round(test_precision, 6)]
+            df_building_dict['Train recall'] = [np.round(train_recall, 6)]
+            df_building_dict['Val recall'] = [np.round(val_recall, 6)]
+            df_building_dict['Test recall'] = [np.round(test_recall, 6)]
+
+
+        df_building_dict['Time'] = [np.round(time_used, 2)]
+
 
         tmp = pd.DataFrame(df_building_dict)
+
 
         self.tuning_result = self.tuning_result.append(tmp)
         self._save_tuning_result()
@@ -905,8 +1001,9 @@ class YangZhou:
         self.checked[combo] = 1
         self.result[combo] = val_score
 
-        print(f'''\tTrained and Tested a Combo, taking {np.round(time_used, 2)} seconds
-            Current best combo: {self.best_combo} with val score {self.best_score}''')
+
+        print(f'''Trained and Tested combination {self._up_to}, taking {time_used} seconds
+        Current best combo: {self.best_combo} with val score {self.best_score}''')
 
 
 
