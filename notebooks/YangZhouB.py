@@ -67,6 +67,7 @@ class YangZhouB:
         self._restarts = 0
         self._cruising = True
         self._surrounding_vectors = None
+        self._total_combos = None
 
         self.regression_extra_output_columns = ['Train r2', 'Val r2', 'Test r2', 
             'Train RMSE', 'Val RMSE', 'Test RMSE', 'Train MAPE', 'Val MAPE', 'Test MAPE', 'Time']
@@ -123,6 +124,7 @@ class YangZhouB:
         # automatically calculate how many different values in each hyperparameter
         self.n_items = [len(parameter_choices[key]) for key in self.hyperparameters]
         self.num_hyperparameters = {hyperparameter:len(parameter_choices[hyperparameter]) for hyperparameter in self.hyperparameters}
+        self._total_combos = np.prod(self.n_items)
 
         # automatically setup checked and result arrays and tuning result dataframe
         self._get_checked_and_result_array()
@@ -168,12 +170,21 @@ class YangZhouB:
 
 
 
-    def set_non_tunable_hyperparameters(self, non_tunable_hyperparameter_choices):
-        """ Input Non tunable hyperparameter choices """
+    def set_non_tuneable_hyperparameters(self, non_tuneable_hyperparameter_choice):
+        """ Input Non tuneable hyperparameter choice """
 
-        self.non_tunable_parameter_choices = non_tunable_hyperparameter_choices
+        if type(non_tuneable_hyperparameter_choice) is not dict:
+            print('non_tuneable_hyeprparameters_choice must be dict, please try again')
+            return
+        
+        for nthp in non_tuneable_hyperparameter_choice:
+            if type(non_tuneable_hyperparameter_choice[nthp]) in (set, list, tuple, dict):
+                print('non_tuneable_hyperparameters_choice must not be of array-like type')
+                return
 
-        print("Successfully recorded non_tunable_hyperparameter choices")
+        self.non_tuneable_parameter_choices = non_tuneable_hyperparameter_choice
+
+        print("Successfully recorded non_tuneable_hyperparameter choices")
 
 
 
@@ -620,9 +631,9 @@ class YangZhouB:
         combo = tuple(combo)
         
         params = {self.hyperparameters[i]:self.parameter_choices[self.hyperparameters[i]][combo[i]] for i in range(len(self.hyperparameters))}
-        for nthp in self.non_tunable_parameter_choices:
-            params[nthp] = self.non_tunable_parameter_choices[nthp]
-            
+        for nthp in self.non_tuneable_parameter_choices:
+            params[nthp] = self.non_tuneable_parameter_choices[nthp]
+
         # initialise object
         clf = self.model(**params)
 
@@ -805,8 +816,9 @@ class YangZhouB:
         self.checked[combo] = 1
         self.result[combo] = val_score
 
+        self._up_to += 1
 
-        print(f'''Trained and Tested combination {self._up_to}, taking {time_used} seconds
+        print(f'''Trained and Tested combination {self._up_to} of {self._total_combos}: {combo}, taking {time_used} seconds to get val score of {val_score}
         Current best combo: {self.best_combo} with val score {self.best_score}''')
 
 
@@ -838,13 +850,17 @@ class YangZhouB:
 
         self.tuning_result = pd.read_csv(address)
         print(f"Successfully read in tuning result of {len(self.tuning_result)} rows")
-
+        
+        self._up_to = 0
+        
         self._create_parameter_value_map_index()
 
-        # read DataFrame data into internal governing DataFrames of YangZhou
+        # read DataFrame data into internal governing DataFrames of JiXi
         for row in self.tuning_result.iterrows():
+
+            self._up_to += 1
     
-            combo = tuple([self._parameter_value_map_index[hyperparam][row[1][hyperparam]] for hyperparam in self.hyperparameters])
+            combo = tuple([self.parameter_value_map_index[hyperparam][row[1][hyperparam]] for hyperparam in self.hyperparameters])
             
             self.checked[combo] = 1
             
