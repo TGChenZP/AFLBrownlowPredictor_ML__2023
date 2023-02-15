@@ -1,4 +1,4 @@
-# 13/02/2023
+# 15/02/2023
 
 import pandas as pd
 import numpy as np
@@ -181,6 +181,57 @@ class YangZhou:
         self.non_tuneable_parameter_choices = non_tuneable_hyperparameter_choice
 
         print("Successfully recorded non_tuneable_hyperparameter choices")
+
+
+
+    def set_features(self, ningxiang_output):
+        """ Input features """
+
+        if type(ningxiang_output) is not dict:
+            print("Please ensure NingXiang output is a dict")
+            return
+        
+        if not self.combos:
+            print("Missing hyperparameter choices, please run .set_hyperparameters() first")
+            return
+        
+        # sort ningxiang just for safety, and store up
+        ningxiang_output_sorted = self._sort_features(ningxiang_output)
+        self.feature_n_ningxiang_score_dict = ningxiang_output_sorted
+
+        # activate this switch
+        self._tune_features = True
+
+        # update previous internal structures based on first set of hyperparameter choices
+        ##here used numbers instead of tuples as the values in parameter_choices; thus need another mapping to get map back to the features
+        self.parameter_choices['features'] = tuple([i for i in range(len(ningxiang_output_sorted))])
+        self.feature_combo_n_index_map = {i: ningxiang_output_sorted.keys()[i] for i in range(len(ningxiang_output_sorted))}
+
+        self.hyperparameters = list(self.parameter_choices.keys())
+
+        # automatically calculate how many different values in each hyperparameter
+        self.n_items = [len(self.parameter_choices[key]) for key in self.hyperparameters]
+        self._total_combos = np.prod(self.n_items)
+
+        # automatically calculate all combinations and setup checked and result arrays and tuning result dataframe
+        self._get_combinations()
+        self._get_checked_and_result_array()
+        self._setup_tuning_result_df()
+
+        print("Successfully recorded tuneable feature combination choices and updated relevant internal structures")
+
+
+    
+    def _sort_features(self, ningxiang_output):
+        """ Helper for sorting features based on NingXiang values (input dict output dict) """
+
+        ningxiang_output_list = [(key, ningxiang_output[key]) for key in ningxiang_output]
+
+        ningxiang_output_list.sort(key = lambda x:x[1])
+
+        ningxiang_output_sorted = {x[0]:x[1] for x in ningxiang_output_list}
+
+        return ningxiang_output_sorted
 
 
 
@@ -670,6 +721,7 @@ class YangZhou:
         for combo in surrounding_combos:
             
             if self.checked[tuple(combo)] == 0:
+                self._up_to += 1
                 self._train_and_test_combo(combo)
             else:
                 print(f'\tAlready Trained and Tested combination {combo}')
@@ -729,6 +781,7 @@ class YangZhou:
             for combo in surrounding_combos:
                 
                 if self.checked[tuple(combo)] == 0:
+                    self._up_to += 1
                     self._train_and_test_combo(combo)
                 else:
                     print(f'\tAlready Trained and Tested combination {combo}')
@@ -771,7 +824,7 @@ class YangZhou:
         for combo in first_round_combinations:
             
             if not self.checked[tuple(combo)]:
-                
+                self._up_to += 1
                 self._train_and_test_combo(combo)
             
             else:
@@ -827,27 +880,54 @@ class YangZhou:
         combo = tuple(combo)
         
         params = {self.hyperparameters[i]:self.parameter_choices[self.hyperparameters[i]][combo[i]] for i in range(len(self.hyperparameters))}
-        for nthp in self.non_tuneable_parameter_choices:
-            params[nthp] = self.non_tuneable_parameter_choices[nthp]
+        
+        
+        if self._tune_features == True:
+            del params['features']
+            tmp_train_x = self.train_x[list(self.feature_combo_n_index_map[combo[-1]])] 
+            tmp_val_x = self.val_x[list(self.feature_combo_n_index_map[combo[-1]])]
+            tmp_test_x = self.test_x[list(self.feature_combo_n_index_map[combo[-1]])]
 
-        # initialise object
-        clf = self.model(**params)
+            # add non tuneable parameters
+            for nthp in self.non_tuneable_parameter_choices:
+                params[nthp] = self.non_tuneable_parameter_choices[nthp]
+
+            # initialise object
+            clf = self.model(**params)
+
+            params['features'] = [list(self.feature_combo_n_index_map[combo[-1]])] 
+            params['feature combo ningxiang score'] = self.feature_n_ningxiang_score_dict[self.feature_combo_n_index_map[combo[-1]]]
+
+        else:
+            tmp_train_x = self.train_x
+            tmp_val_x = self.val_x
+            tmp_test_x = self.test_x
+
+            # add non tuneable parameters
+            for nthp in self.non_tuneable_parameter_choices:
+                params[nthp] = self.non_tuneable_parameter_choices[nthp]
+
+            # initialise object
+            clf = self.model(**params)
 
         # get time and fit
         start = time.time()
-        clf.fit(self.train_x, self.train_y)
+        clf.fit(tmp_train_x, self.train_y)
         end = time.time()
 
         # get predicted labels/values for three datasets
-        train_pred = clf.predict(self.train_x)
-        val_pred = clf.predict(self.val_x)
-        test_pred = clf.predict(self.test_x)
+        train_pred = clf.predict(tmp_train_x)
+        val_pred = clf.predict(tmp_val_x)
+        test_pred = clf.predict(tmp_test_x)
 
         # get scores and time used
         time_used = end-start
 
         # build output dictionary and save result
         df_building_dict = params
+        for nthp in self.non_tuneable_parameter_choices:
+            del params[nthp] 
+
 
         if self.clf_type == 'Regression':
 
@@ -1012,7 +1092,6 @@ class YangZhou:
         self.checked[combo] = 1
         self.result[combo] = val_score
 
-        self._up_to += 1
 
         print(f'''Trained and Tested combination {self._up_to} of {self._total_combos}: {combo}, taking {time_used} seconds to get val score of {val_score}
         Current best combo: {self.best_combo} with val score {self.best_score}''')
@@ -1051,7 +1130,7 @@ class YangZhou:
 
         self._create_parameter_value_map_index()
 
-        # read DataFrame data into internal governing DataFrames of JiXi
+        # read DataFrame data into internal governing DataFrames of YangZhou
         for row in self.tuning_result.iterrows():
 
             self._up_to += 1
