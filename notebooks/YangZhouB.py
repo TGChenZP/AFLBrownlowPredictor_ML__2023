@@ -9,13 +9,11 @@ import numpy as np
 import statistics as s
 import copy
 import time
-from itertools import combinations
 import pickle
 import random
 
 from scipy.spatial.distance import cdist
 from scipy.stats import t
-from scipy import stats
 
 from sklearn.metrics import r2_score, mean_absolute_percentage_error, mean_squared_error
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, balanced_accuracy_score
@@ -46,6 +44,8 @@ class YangZhouB:
         self.model = None
         self.parameter_choices = None
         self.hyperparameters = None
+        self.feature_n_ningxiang_score_dict = None
+        self.non_tuneable_parameter_choices = None
         self.checked = None
         self.result = None
         self.checked_core = None
@@ -68,6 +68,7 @@ class YangZhouB:
         self._cruising = True
         self._surrounding_vectors = None
         self._total_combos = None
+        self._tune_features = False
 
         self.regression_extra_output_columns = ['Train r2', 'Val r2', 'Test r2', 
             'Train RMSE', 'Val RMSE', 'Test RMSE', 'Train MAPE', 'Val MAPE', 'Test MAPE', 'Time']
@@ -84,7 +85,7 @@ class YangZhouB:
         print("Read in Train X data")
 
         self.train_y = train_y
-        print("Read in Train x data")
+        print("Read in Train y data")
 
         self.val_x = val_x
         print("Read in Val X data")
@@ -576,7 +577,7 @@ class YangZhouB:
 
 
         # for current max, get 3^d block. if new max happens to be found, continue to do 3^d block until no new max is found
-        # just a cheap way to flesh out the max (the goal of YangZhou)
+        # just a cheap way to flesh out the max (the goal of YangZhouB)
         while self.been_best[tuple(self.best_combo)] == 0:
 
             self.been_best[tuple(self.best_combo)] = 1 
@@ -936,7 +937,7 @@ class YangZhouB:
 
         self._create_parameter_value_map_index()
 
-        # read DataFrame data into internal governing DataFrames of YangZhou
+        # read DataFrame data into internal governing DataFrames of YangZhouB
         for row in self.tuning_result.iterrows():
 
             self._up_to += 1
@@ -980,15 +981,15 @@ class YangZhouB:
 
 
     def _set_object_saving_address(self, address):
-        """ Read in where to save the YangZhou object """
+        """ Read in where to save the YangZhouB object """
 
         self.object_saving_address = address
         print('Successfully set object output address')
 
 
 
-    def export_yangzhou(self, address):
-        """ Export yangzhou object """
+    def export_yangzhoub(self, address):
+        """ Export yangzhou-b object """
 
         self._set_object_saving_address(address)
 
@@ -1008,4 +1009,4 @@ class YangZhouB:
         with open(f'{object_saving_address_split}.pickle', 'wb') as f:
             pickle.dump(object_save, f)
 
-        print(f'Successfully exported YangZhou object as {self.object_saving_address}')
+        print(f'Successfully exported YangZhouB object as {self.object_saving_address}')

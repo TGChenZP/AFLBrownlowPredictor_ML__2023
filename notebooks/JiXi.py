@@ -39,6 +39,8 @@ class JiXi:
         self.model = None
         self.parameter_choices = None
         self.hyperparameters = None
+        self.feature_n_ningxiang_score_dict = None
+        self.non_tuneable_parameter_choices = None
         self.checked = None
         self.result = None
         self.tuning_result_saving_address = None
@@ -59,8 +61,9 @@ class JiXi:
         self._pos_neg_combos = None
         self._abs_max = None
         self._new_combos = None
-        self.parameter_value_map_index = None
+        self._parameter_value_map_index = None
         self._total_combos = None
+        self._tune_features = False
 
         self.regression_extra_output_columns = ['Train r2', 'Val r2', 'Test r2', 
             'Train RMSE', 'Val RMSE', 'Test RMSE', 'Train MAPE', 'Val MAPE', 'Test MAPE', 'Time']
@@ -77,7 +80,7 @@ class JiXi:
         print("Read in Train X data")
 
         self.train_y = train_y
-        print("Read in Train x data")
+        print("Read in Train y data")
 
         self.val_x = val_x
         print("Read in Val X data")
@@ -757,7 +760,7 @@ class JiXi:
         """ Read in tuning result csv and read data into checked and result arrays """
 
         if self.parameter_choices is None:
-            print("Missing parameter_choices to build parameter_value_map_index, please run set_hyperparameters() first")
+            print("Missing parameter_choices to build _parameter_value_map_index, please run set_hyperparameters() first")
 
         if self.clf_type is None:
             print('Missing clf_type. Please run .read_in_model() first.')
@@ -767,14 +770,14 @@ class JiXi:
 
         self._up_to = 0
 
-        self._create_parameter_value_map_index()
+        self._create__parameter_value_map_index()
 
         # read DataFrame data into internal governing DataFrames of JiXi
         for row in self.tuning_result.iterrows():
 
             self._up_to += 1
     
-            combo = tuple([self.parameter_value_map_index[hyperparam][row[1][hyperparam]] for hyperparam in self.hyperparameters])
+            combo = tuple([self._parameter_value_map_index[hyperparam][row[1][hyperparam]] for hyperparam in self.hyperparameters])
             
             self.checked[combo] = 1
             
@@ -792,15 +795,15 @@ class JiXi:
 
 
     
-    def _create_parameter_value_map_index(self):
+    def _create__parameter_value_map_index(self):
         """ Helper to create parameter-value index map """
 
-        self.parameter_value_map_index = dict()
+        self._parameter_value_map_index = dict()
         for key in self.parameter_choices.keys():
             tmp = dict()
             for i in range(len(self.parameter_choices[key])):
                 tmp[self.parameter_choices[key][i]] = i
-            self.parameter_value_map_index[key] = tmp
+            self._parameter_value_map_index[key] = tmp
     
 
 

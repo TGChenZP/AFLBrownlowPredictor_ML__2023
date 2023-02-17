@@ -1,10 +1,12 @@
-# 28/01/2023
+# 17/02/2023
 
-from ZhongShan import *
+
+
+
+import pandas as pd
 import pickle
-import copy
-import numpy as np
-import json
+
+from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 
 
 
@@ -12,11 +14,12 @@ import json
 
 class NingXiang:
 
-    def __init__(self, sanmin):
+
+
+    def __init__(self):
         """ Initialise class """
     
         self._initialise_objects()
-        self.sanmin = sanmin
 
         print('NingXiang Initialised')
 
@@ -25,146 +28,115 @@ class NingXiang:
     def _initialise_objects(self):
         
         self._seed = 18981124
-        self.sanmin = None
+        self.train_x = None
+        self.train_y = None
+        self.clf_type = None
+        self.ningxiang_output = None
+        self.object_saving_address = None
+        
     
+    
+    def read_in_train_data(self, train_x, train_y):
+        """ Reads in train data for building NingXiang output object """
+
+        self.train_x = train_x
+        print("Read in Train X data")
+
+        self.train_y = train_y
+        print("Read in Train y data")
+
+
+
+    def set_model_type(self, type):
+        """ Reads in underlying model object for tuning, and also read in what type of model it is """
+
+        assert type == 'Classification' or type == 'Regression' # check
+
+        self.clf_type = type 
+
+        print(f'Successfully recorded model type, which is a {self.clf_type} model')
 
     
-    def get_feature_combinations(self, score_type, label, penalty_function_type, export_address = None):
-        """ Function that gets combinations based on NingXiang's algorithm along with its score, based on
-        inputted score type, label and penalty function type. Has option to export"""
 
-        if score_type not in ('NMI', 'Abs Corr'):
-            print("score_type should be either 'NMI' or 'Abs Corr'")
+    def get_rf_based_feature_combinations(self):
+        """ Gets NingXiang scores based on RF feature importance """
+        
+        if self.clf_type == None:
+            print('clf_type not found, please run set_model_type() first')
+            return
+
+        if self.train_x is None or self.train_y is None:
+            print('train_x and train_y not found, please run read_in_train_data')
             return
         
-        if label not in self.sanmin.label_columns:
-            print("label should be in the designated labels column")
-            return
 
-        if penalty_function_type not in ('None', 'Mean', 'Max'):
-            print("penalty_function_type should be either 'None' or 'Mean' or 'Max'")
-            return
-
-        # get the correct matrix
-        if score_type == 'Abs Corr':
-            score_matrix = self.sanmin.abs_corr_matrix
-        elif score_type == 'NMI':
-            score_matrix = self.sanmin.NMI_matrix
-            
-        # get the correct penalty function
-        if penalty_function_type == 'None':
-            funct = self._return_zero
-        elif penalty_function_type == 'Mean':
-            funct = np.mean
-        elif penalty_function_type == 'Max':
-            funct = max
-
-        # object to output
-        feature_combos_with_score = list()
-
-        # starting with each individual feature
-        for feature in self.sanmin.final_features[label]:
-            if feature in self.sanmin.label_columns: # don't add if it is a label
-                continue
-
-            # initial current combo
-            curr_combo = [feature]
-
-            # initial current score
-            curr_combo_score = score_matrix.loc[feature][label]
-
-            # initial combo appended with its score
-            feature_combos_with_score.append((copy.deepcopy(curr_combo), curr_combo_score))
-
-            switch = True
-
-            while switch is True:
-
-                # temporary scores
-                curr_added_value = 0
-                curr_feature_to_add = None
-
-                # for all try-able combinations
-                for candidate_feature in self.sanmin.final_features[label]: 
-                    if candidate_feature in curr_combo or candidate_feature in self.sanmin.label_columns: # don't try those already in, nor those that are labels
-                        continue
-                    
-                    # get candidate's own corr with label
-                    candidate_feature_score = score_matrix.loc[candidate_feature][label]
-
-                    # get list of corr between candidate and features currently in combo
-                    candidate_feature_relation_scores = list()
-                    for curr_combo_feature in curr_combo:
-                        candidate_feature_relation_scores.append(score_matrix.loc[candidate_feature][curr_combo_feature])
-                    
-                    # if candidate score - penalty > current best, then accept; else, don't accept
-                    if candidate_feature_score - funct(candidate_feature_relation_scores) >= curr_added_value:
-                        curr_added_value = candidate_feature_score - funct(candidate_feature_relation_scores)
-                        curr_feature_to_add = candidate_feature
-
-                # if managed to add something to combo, then continue loop and add to overall list, else break this loop
-                if curr_feature_to_add is None:
-                    switch = False
-
-                else:
-                    curr_combo.append(curr_feature_to_add)
-                    curr_combo_score += curr_added_value
-                    feature_combos_with_score.append((copy.deepcopy(curr_combo), curr_combo_score))
-
-        # Remove duplicates and sort
-        feature_combos_with_score = self._features_duplicate_removal(feature_combos_with_score)
-        feature_combos_with_score.sort(key = lambda x: x[1])
-
-        # Get pure feature combinations, and scores of feature combinations
-        feature_combo = [feature_combo[0] for feature_combo in feature_combos_with_score]
-        feature_combo_scores = [feature_combo[1] for feature_combo in feature_combos_with_score]
-
-        print(f"{len(feature_combos_with_score)} feature combinations, with combo scores ranging from {round(feature_combo_scores[0], 4)} to {round(feature_combo_scores[-1], 4)}")
+        # Initialise the Random Forest objects
+        if self.clf_type == 'Regression':
+            rf = RandomForestRegressor(n_estimators = 100, max_depth = 12, max_features = 0.75, random_state = self._seed, ccp_alpha = 0, max_samples = 0.75)
+        elif self.clf_type == 'Classification':
+            rf = RandomForestClassifier(n_estimators = 100, max_depth = 12, max_features = 0.75, random_state = self._seed, ccp_alpha = 0, max_samples = 0.75)
         
+        # fit the model and get the feature importances
+        rf.fit(self.train_x, self.train_y)
+        feature_importance = {self.train_x.columns[i]:rf.feature_importances_[i] for i in range(len(self.train_x.columns))}
 
-        # Export combinations and scores as a json
-        if export_address:
-            json_output = {'feature_combos_with_score': feature_combos_with_score, 
-                            'feature_combo': feature_combo, 
-                            'feature_combo_scores': feature_combo_scores}
-            
-            export_address_strip = export_address.split('.json')[0]
-            with open(f'{export_address_strip}.json', 'w') as f:
-                json.dump(json_output, f, indent=2) 
-            print("Export Completed")
+        # sort features by feature importance (reversed order)
+        feature_importance_sorted = self._sort_dict_reverse(feature_importance)
+        # get the features in the output format that can be linked up with other JiaXing packages
+        self.ningxiang_output = self._get_ningxiang_rf_output(feature_importance_sorted)
+
+        return self.ningxiang_output
+        
     
-        return feature_combos_with_score, feature_combo, feature_combo_scores
+    
+    def _sort_dict_reverse(self, features):
+        """ Helper to sort dictionary"""
 
+        features_list = [(key, features[key]) for key in features]
+        features_list.sort(key=lambda x:x[1], reverse=True)
 
-    def _return_zero(self, dummy):
-        """ Helper function that returns 0 for penalty, no matter input """
-        return 0
+        features_reverse_sorted = {x[0]:x[1] for x in features_list}
+
+        return features_reverse_sorted
     
 
 
-    def _features_duplicate_removal(self, feature_combos_with_score):
-        """ Helper function that remove duplicate combinations """
-        for i in range(len(feature_combos_with_score)):
-            feature_combos_with_score[i][0].sort()
+    def _get_ningxiang_rf_output(self, features_reverse_sorted):
+        """ Helper to get rf feature importance into ningxiang output format """
 
-        feature_combos_with_score.sort(key = lambda x:x[0])
+        out = dict() # NingXiang output object must be a dict
 
-        duplicate_i = []
+        feature_combo = list()
+        score = 0
 
-        feature_combos_no_duplicates = []
+        # Continuously add feature and its score
+        for feature in features_reverse_sorted:
+            feature_combo.append(feature)
+            score += features_reverse_sorted[feature]
 
-        for i in range(len(feature_combos_with_score)-1):
-            if i in duplicate_i:
-                continue
+            combo = tuple(feature_combo)
 
-            if feature_combos_with_score[i][0] == feature_combos_with_score[i+1][0]:
-                # retain the higher score
-                if feature_combos_with_score[i][1] >= feature_combos_with_score[i+1][1]:
-                    duplicate_i.append(i)
-                else:
-                    duplicate_i.append(i+1)
-            
-            if i not in duplicate_i:
-                feature_combos_no_duplicates.append(feature_combos_with_score[i])
+            out[combo] = score
 
-        return feature_combos_no_duplicates
+        return out
+
+
+
+    def _set_object_saving_address(self, address):
+        """ Read in where to save the PuDong object """
+
+        self.object_saving_address = address
+        print('Successfully set object output address')
+
+    
+
+    def export_ningxiang_output(self, address):
+        """ Export NingXiang's output object  """
+
+        self._set_object_saving_address(address)
+
+        # Export
+        object_saving_address_split = self.object_saving_address.split('.pickle')[0]
+
+        with open(f'{object_saving_address_split}.pickle', 'wb') as f:
+            pickle.dump(self.ningxiang_output, f)

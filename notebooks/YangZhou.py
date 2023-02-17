@@ -42,6 +42,8 @@ class YangZhou:
         self.model = None
         self.parameter_choices = None
         self.hyperparameters = None
+        self.feature_n_ningxiang_score_dict = None
+        self.non_tuneable_parameter_choices = None
         self.checked = None
         self.result = None
         self.checked_core = None
@@ -64,6 +66,7 @@ class YangZhou:
         self._cruising = True
         self._surrounding_vectors = None
         self._total_combos = None
+        self._tune_features = False
 
         self.regression_extra_output_columns = ['Train r2', 'Val r2', 'Test r2', 
             'Train RMSE', 'Val RMSE', 'Test RMSE', 'Train MAPE', 'Val MAPE', 'Test MAPE', 'Time']
@@ -80,7 +83,7 @@ class YangZhou:
         print("Read in Train X data")
 
         self.train_y = train_y
-        print("Read in Train x data")
+        print("Read in Train y data")
 
         self.val_x = val_x
         print("Read in Val X data")

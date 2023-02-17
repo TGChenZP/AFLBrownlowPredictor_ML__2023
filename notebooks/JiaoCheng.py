@@ -1,4 +1,4 @@
-# 15/02/2023
+# 17/02/2023
 
 
 
@@ -8,7 +8,6 @@ import pandas as pd
 import copy
 import time
 import numpy as np
-import random
 import pickle
 
 from sklearn.metrics import r2_score, mean_absolute_percentage_error, mean_squared_error
@@ -44,30 +43,26 @@ class JiaoCheng:
         self.parameter_choices = None
         self.hyperparameters = None
         self.feature_n_ningxiang_score_dict = None
-        self.feature_combo_n_index_map = None
+        self.non_tuneable_parameter_choices = None
+        self._feature_combo_n_index_map = None
         self.checked = None
         self.result = None
         self.tuning_result_saving_address = None
         self.object_saving_address = None
         self._up_to = 0
         self._tune_features = False
-        self._seed = 19421221
+        self._seed = 19210216
         self.best_score = -np.inf
         self.best_combo = None
         self.best_clf = None
         self.clf_type = None
         self.combos = None
         self.n_items = None
-        self.outmost_layer = None
-        self._core = None
-        self._relative_combos = None
-        self._both_combos = None
-        self._dealt_with = None
-        self._pos_neg_combos = None
-        self._abs_max = None
-        self._new_combos = None
-        self.parameter_value_map_index = None
+        self.hyperparameter_tuning_order = None
+        self._tuning_order_map_hp = None
+        self._parameter_value_map_index = None
         self._total_combos = None
+        self._tune_features = False
 
         self.regression_extra_output_columns = ['Train r2', 'Val r2', 'Test r2', 
             'Train RMSE', 'Val RMSE', 'Test RMSE', 'Train MAPE', 'Val MAPE', 'Test MAPE', 'Time']
@@ -84,7 +79,7 @@ class JiaoCheng:
         print("Read in Train X data")
 
         self.train_y = train_y
-        print("Read in Train x data")
+        print("Read in Train y data")
 
         self.val_x = val_x
         print("Read in Val X data")
@@ -208,7 +203,7 @@ class JiaoCheng:
         # update previous internal structures based on first set of hyperparameter choices
         ##here used numbers instead of tuples as the values in parameter_choices; thus need another mapping to get map back to the features
         self.parameter_choices['features'] = tuple([i for i in range(len(ningxiang_output_sorted))])
-        self.feature_combo_n_index_map = {i: ningxiang_output_sorted.keys()[i] for i in range(len(ningxiang_output_sorted))}
+        self._feature_combo_n_index_map = {i: ningxiang_output_sorted.keys()[i] for i in range(len(ningxiang_output_sorted))}
 
         self.hyperparameters = list(self.parameter_choices.keys())
 
@@ -260,7 +255,7 @@ class JiaoCheng:
                 return
 
         self.hyperparameter_tuning_order = order
-        self.tuning_order_map_hp = {order[i]:i for i in range(len(order))}
+        self._tuning_order_map_hp = {order[i]:i for i in range(len(order))}
     
 
     
@@ -342,8 +337,8 @@ class JiaoCheng:
                     tmp_switch = 0
 
                     combo = copy.deepcopy(starting_hp_combo)
-                    if combo[self.tuning_order_map_hp[i]] + j < self.n_items[self.tuning_order_map_hp[i]]: # check upward movement hasn't exceeded bound
-                        combo[self.tuning_order_map_hp[i]] += j
+                    if combo[self._tuning_order_map_hp[i]] + j < self.n_items[self._tuning_order_map_hp[i]]: # check upward movement hasn't exceeded bound
+                        combo[self._tuning_order_map_hp[i]] += j
                         
                         if not self.checked[(tuple(combo))]:
                             self._up_to += 1
@@ -355,8 +350,8 @@ class JiaoCheng:
                         tmp_switch += 1 
                     
 
-                    if combo[self.tuning_order_map_hp[i]] - j >= 0: # check downward movement hasn't exceeded bound
-                        combo[self.tuning_order_map_hp[i]] -= j
+                    if combo[self._tuning_order_map_hp[i]] - j >= 0: # check downward movement hasn't exceeded bound
+                        combo[self._tuning_order_map_hp[i]] -= j
                         
                         if not self.checked[(tuple(combo))]:
                             self._up_to += 1
@@ -398,9 +393,9 @@ class JiaoCheng:
         
         if self._tune_features == True:
             del params['features']
-            tmp_train_x = self.train_x[list(self.feature_combo_n_index_map[combo[-1]])] 
-            tmp_val_x = self.val_x[list(self.feature_combo_n_index_map[combo[-1]])]
-            tmp_test_x = self.test_x[list(self.feature_combo_n_index_map[combo[-1]])]
+            tmp_train_x = self.train_x[list(self._feature_combo_n_index_map[combo[-1]])] 
+            tmp_val_x = self.val_x[list(self._feature_combo_n_index_map[combo[-1]])]
+            tmp_test_x = self.test_x[list(self._feature_combo_n_index_map[combo[-1]])]
 
             # add non tuneable parameters
             for nthp in self.non_tuneable_parameter_choices:
@@ -409,8 +404,8 @@ class JiaoCheng:
             # initialise object
             clf = self.model(**params)
 
-            params['features'] = [list(self.feature_combo_n_index_map[combo[-1]])] 
-            params['feature combo ningxiang score'] = self.feature_n_ningxiang_score_dict[self.feature_combo_n_index_map[combo[-1]]]
+            params['features'] = [list(self._feature_combo_n_index_map[combo[-1]])] 
+            params['feature combo ningxiang score'] = self.feature_n_ningxiang_score_dict[self._feature_combo_n_index_map[combo[-1]]]
 
         else:
             tmp_train_x = self.train_x
@@ -631,7 +626,7 @@ class JiaoCheng:
         """ Read in tuning result csv and read data into checked and result arrays """
 
         if self.parameter_choices is None:
-            print("Missing parameter_choices to build parameter_value_map_index, please run set_hyperparameters() first")
+            print("Missing parameter_choices to build _parameter_value_map_index, please run set_hyperparameters() first")
 
         if self.clf_type is None:
             print('Missing clf_type. Please run .read_in_model() first.')
@@ -641,14 +636,14 @@ class JiaoCheng:
 
         self._up_to = 0
 
-        self._create_parameter_value_map_index()
+        self._create__parameter_value_map_index()
 
         # read DataFrame data into internal governing DataFrames of JiaoCheng
         for row in self.tuning_result.iterrows():
 
             self._up_to += 1
     
-            combo = tuple([self.parameter_value_map_index[hyperparam][row[1][hyperparam]] for hyperparam in self.hyperparameters])
+            combo = tuple([self._parameter_value_map_index[hyperparam][row[1][hyperparam]] for hyperparam in self.hyperparameters])
             
             self.checked[combo] = 1
             
@@ -666,15 +661,15 @@ class JiaoCheng:
 
 
     
-    def _create_parameter_value_map_index(self):
+    def _create__parameter_value_map_index(self):
         """ Helper to create parameter-value index map """
 
-        self.parameter_value_map_index = dict()
+        self._parameter_value_map_index = dict()
         for key in self.parameter_choices.keys():
             tmp = dict()
             for i in range(len(self.parameter_choices[key])):
                 tmp[self.parameter_choices[key][i]] = i
-            self.parameter_value_map_index[key] = tmp
+            self._parameter_value_map_index[key] = tmp
     
 
 
