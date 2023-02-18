@@ -43,7 +43,7 @@ class JiaoCheng:
         self.parameter_choices = None
         self.hyperparameters = None
         self.feature_n_ningxiang_score_dict = None
-        self.non_tuneable_parameter_choices = None
+        self.non_tuneable_parameter_choices = list()
         self._feature_combo_n_index_map = None
         self.checked = None
         self.result = None
@@ -114,6 +114,8 @@ class JiaoCheng:
         self.parameter_choices = parameter_choices
         self._sort_hyperparameter_choices()
 
+        self.param_value_reverse_map = {param:{self.parameter_choices[param][j]:j for j in range(len(self.parameter_choices[param]))} for param in self.parameter_choices}
+
         self.hyperparameters = list(parameter_choices.keys())
 
         # automatically calculate how many different values in each hyperparameter
@@ -121,6 +123,7 @@ class JiaoCheng:
         self._total_combos = np.prod(self.n_items)
 
         # automatically calculate all combinations and setup checked and result arrays and tuning result dataframe
+        self._get_combinations()
         self._get_checked_and_result_array()
         self._setup_tuning_result_df()
 
@@ -135,6 +138,29 @@ class JiaoCheng:
             tmp = copy.deepcopy(list(self.parameter_choices[key]))
             tmp.sort()
             self.parameter_choices[key] = tuple(tmp)
+
+    
+
+    def _get_combinations(self):
+        """ Helper to calculate all combinations """
+
+        ##ALGORITHM
+
+        # recursively append values to get every combination in ordinal/numerical form
+        self.combos = [[]]
+        for i in range(len(self.n_items)):
+
+            tmp = copy.deepcopy(self.combos)
+            self.combos = list()
+
+            for x in tmp:
+
+                for k in range(self.n_items[i]):
+                    y = copy.deepcopy(x)
+                    
+                    y.append(k)
+
+                    self.combos.append(y)
 
 
 
@@ -250,12 +276,12 @@ class JiaoCheng:
                 return
         
         for hp in order:
-            if hp not in self.hyperparameter:
-                print(f'Feature {hp} is not in self.hyperparameter which was set by set_hyperparameters(); consider reinitiating JiaoCheng or double checking input')
+            if hp not in self.hyperparameters:
+                print(f'Feature {hp} is not in self.hyperparameters which was set by set_hyperparameters(); consider reinitiating JiaoCheng or double checking input')
                 return
 
         self.hyperparameter_tuning_order = order
-        self._tuning_order_map_hp = {order[i]:i for i in range(len(order))}
+        self._tuning_order_map_hp = {self.hyperparameters[i]:i for i in range(len(self.hyperparameters))}
     
 
     
@@ -276,7 +302,7 @@ class JiaoCheng:
                 return
         
         for hp in default_values:
-            if hp not in self.hyperparameter:
+            if hp not in self.hyperparameters:
                 print(f'Feature {hp} is not in self.hyperparameter which was set by set_hyperparameters(); consider reinitiating JiaoCheng or double checking input')
                 return
             if default_values[hp] not in self.parameter_choices[hp]:
@@ -308,65 +334,36 @@ class JiaoCheng:
         self.key_stats_only = key_stats_only
         
         
-        starting_hp_combo = [val for val in self.hyperparameter_default_values] # setup starting combination
+        starting_hp_combo = [self.param_value_reverse_map[hp][self.hyperparameter_default_values[hp]] for hp in self.hyperparameter_default_values] # setup starting combination
+        print('\nDefault combo:', starting_hp_combo, '\n')
 
         round = 1
         switch = 1 # continuously loop through features until converge (combo stays same after a full round)
         while switch:
-            print("ROUND", round)
+            print("\nROUND", round)
             round += 1
 
             # first store previous round's best combo/the starting combo before each round; for comparison at the end
             old_starting_hp_combo = copy.deepcopy(starting_hp_combo)
 
-            for i in range(len(self.hyperparameter_tuning_order)): # tune each hp in order
-                print(self.hyperparameter_tuning_order[i])
+            for hp in self.hyperparameter_tuning_order: # tune each hp in order
+                print('\nHyperparameter:', hp, f'(index: {self._tuning_order_map_hp[hp]})', '\n')
 
-                combo = copy.deepcopy(starting_hp_combo) # tune the root combo
-                if not self.checked[(tuple(combo))]:
-                    self._up_to += 1
-                    self._train_and_test_combo(combo)
-                else:
-                    print(f'Already Trained and Tested combination {self._up_to}')
+                combo = list(copy.deepcopy(starting_hp_combo)) # tune the root combo
+                combo[self._tuning_order_map_hp[hp]] = 0
 
-                j = 0
-                continuing = 1
-                while continuing: # search out all values of this hyperparameter
-                    j += 1 # distance to move away from the root combo
+                for i in range(self.n_items[self._tuning_order_map_hp[hp]]):
+                
+                  if not self.checked[tuple(combo)]:
+                      self._up_to += 1
+                      self._train_and_test_combo(combo)
+                  else:
+                      print(f'Already Trained and Tested combination {self._up_to}, with val score {np.round(self.result[tuple(combo)], 4)}')
                     
-                    tmp_switch = 0
-
-                    combo = copy.deepcopy(starting_hp_combo)
-                    if combo[self._tuning_order_map_hp[i]] + j < self.n_items[self._tuning_order_map_hp[i]]: # check upward movement hasn't exceeded bound
-                        combo[self._tuning_order_map_hp[i]] += j
-                        
-                        if not self.checked[(tuple(combo))]:
-                            self._up_to += 1
-                            self._train_and_test_combo(combo)
-                        else:
-                            print(f'Already Trained and Tested combination {self._up_to}')
-
-                    else:
-                        tmp_switch += 1 
-                    
-
-                    if combo[self._tuning_order_map_hp[i]] - j >= 0: # check downward movement hasn't exceeded bound
-                        combo[self._tuning_order_map_hp[i]] -= j
-                        
-                        if not self.checked[(tuple(combo))]:
-                            self._up_to += 1
-                            self._train_and_test_combo(combo)
-                        else:
-                            print(f'Already Trained and Tested combination {self._up_to}')
-
-                    else:
-                        tmp_switch += 1
-
-                    
-                    if tmp_switch == 2: # if both have exceeded bound then stop
-                        continuing = 0
-                        
+                  combo[self._tuning_order_map_hp[hp]] += 1 
+                
                 starting_hp_combo = copy.deepcopy(self.best_combo) # take the best combo after this hyperparameter has been tuned
+                print('\nBest combo after this round:', starting_hp_combo, '\n')
             
             if starting_hp_combo == old_starting_hp_combo: # if after this full round best combo hasn't moved, then can terminate
                 switch = 0
@@ -601,8 +598,8 @@ class JiaoCheng:
         self.checked[combo] = 1
         self.result[combo] = val_score
 
-        print(f'''Trained and Tested combination {self._up_to} of {self._total_combos}: {combo}, taking {time_used} seconds to get val score of {val_score}
-        Current best combo: {self.best_combo} with val score {self.best_score}''')
+        print(f'''Trained and Tested combination {self._up_to} of {self._total_combos}: {combo}, taking {np.round(time_used,2)} seconds to get val score of {np.round(val_score,4)}
+        Current best combo: {self.best_combo} with val score {np.round(self.best_score, 4)}''')
 
 
 

@@ -45,7 +45,7 @@ class YangZhouB:
         self.parameter_choices = None
         self.hyperparameters = None
         self.feature_n_ningxiang_score_dict = None
-        self.non_tuneable_parameter_choices = None
+        self.non_tuneable_parameter_choices = list()
         self.checked = None
         self.result = None
         self.checked_core = None
@@ -900,8 +900,8 @@ class YangZhouB:
 
         self._up_to += 1
 
-        print(f'''Trained and Tested combination {self._up_to} of {self._total_combos}: {combo}, taking {time_used} seconds to get val score of {val_score}
-        Current best combo: {self.best_combo} with val score {self.best_score}''')
+        print(f'''Trained and Tested combination {self._up_to} of {self._total_combos}: {combo}, taking {np.round(time_used,2)} seconds to get val score of {np.round(val_score,4)}
+        Current best combo: {self.best_combo} with val score {np.round(self.best_score, 4)}''')
 
 
                 
