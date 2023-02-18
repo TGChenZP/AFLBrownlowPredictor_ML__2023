@@ -69,6 +69,7 @@ class YangZhouB:
         self._surrounding_vectors = None
         self._total_combos = None
         self._tune_features = False
+        self._up_to = 0
 
         self.regression_extra_output_columns = ['Train r2', 'Val r2', 'Test r2', 
             'Train RMSE', 'Val RMSE', 'Test RMSE', 'Train MAPE', 'Val MAPE', 'Test MAPE', 'Time']
@@ -196,7 +197,7 @@ class YangZhouB:
             print("Please ensure NingXiang output is a dict")
             return
         
-        if not self.combos:
+        if not self.hyperparameters:
             print("Missing hyperparameter choices, please run .set_hyperparameters() first")
             return
         
@@ -210,16 +211,16 @@ class YangZhouB:
         # update previous internal structures based on first set of hyperparameter choices
         ##here used numbers instead of tuples as the values in parameter_choices; thus need another mapping to get map back to the features
         self.parameter_choices['features'] = tuple([i for i in range(len(ningxiang_output_sorted))])
-        self.feature_combo_n_index_map = {i: ningxiang_output_sorted.keys()[i] for i in range(len(ningxiang_output_sorted))}
+        self.feature_combo_n_index_map = {i: list(ningxiang_output_sorted.keys())[i] for i in range(len(ningxiang_output_sorted))}
 
         self.hyperparameters = list(self.parameter_choices.keys())
 
         # automatically calculate how many different values in each hyperparameter
         self.n_items = [len(self.parameter_choices[key]) for key in self.hyperparameters]
+        self.num_hyperparameters = {hyperparameter:len(self.parameter_choices[hyperparameter]) for hyperparameter in self.hyperparameters}
         self._total_combos = np.prod(self.n_items)
 
         # automatically calculate all combinations and setup checked and result arrays and tuning result dataframe
-        self._get_combinations()
         self._get_checked_and_result_array()
         self._setup_tuning_result_df()
 

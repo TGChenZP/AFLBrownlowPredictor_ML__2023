@@ -211,7 +211,7 @@ class JiXi:
             print("Please ensure NingXiang output is a dict")
             return
         
-        if not self.combos:
+        if not self.hyperparameters:
             print("Missing hyperparameter choices, please run .set_hyperparameters() first")
             return
         
@@ -225,7 +225,7 @@ class JiXi:
         # update previous internal structures based on first set of hyperparameter choices
         ##here used numbers instead of tuples as the values in parameter_choices; thus need another mapping to get map back to the features
         self.parameter_choices['features'] = tuple([i for i in range(len(ningxiang_output_sorted))])
-        self.feature_combo_n_index_map = {i: ningxiang_output_sorted.keys()[i] for i in range(len(ningxiang_output_sorted))}
+        self.feature_combo_n_index_map = {i: list(ningxiang_output_sorted.keys())[i] for i in range(len(ningxiang_output_sorted))}
 
         self.hyperparameters = list(self.parameter_choices.keys())
 
