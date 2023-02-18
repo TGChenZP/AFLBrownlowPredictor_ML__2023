@@ -1,12 +1,15 @@
-# 17/02/2023
+# 18/02/2023
 
 
 
 
 import pandas as pd
+import numpy as np
 import pickle
+import copy
 
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
+from sklearn.linear_model import LinearRegression
 
 
 
@@ -54,7 +57,60 @@ class NingXiang:
 
         self.clf_type = type 
 
-        print(f'Successfully recorded model type, which is a {self.clf_type} model')
+        print(f'Successfully recorded model type: {self.clf_type}')
+
+
+
+    def get_lr_based_feature_combinations(self):
+        """ Get NingXiang scores based on LR feature importance """
+
+        if self.clf_type == None:
+            print('clf_type not found, please run set_model_type() first')
+            return
+        
+        if self.clf_type == 'Classification':
+            print(".get_lr_based_combinations() only works for continuous labels")
+            return
+
+        if self.train_x is None or self.train_y is None:
+            print('train_x and train_y not found, please run read_in_train_data')
+            return
+
+        self.ningxiang_output = dict()
+
+        curr_combo = list()
+        remaining_features = list(self.train_x.columns)
+        for i in range(len(remaining_features)):
+            print(f'Up to {i+1}th variable')
+
+            best_score = 0
+            best_combo = None
+            
+            # try adding each new feature and getting lr
+            for feature in remaining_features:
+                tmp_combo = copy.deepcopy(curr_combo)
+                tmp_combo.append(feature)
+
+                lr = LinearRegression()
+                lr.fit(self.train_x[tmp_combo], self.train_y)
+
+                score = lr.score(self.train_x[tmp_combo], self.train_y)
+                
+                # if is new max of this round, then update
+                if score > best_score:
+                    added_feature = feature
+                    best_score = score
+                    best_combo = copy.deepcopy(tmp_combo)
+            
+            curr_combo = copy.deepcopy(best_combo)
+            remaining_features.remove(added_feature) # remove added feature
+            print(f'Current combination: {curr_combo}')
+            print(f'Best score: {np.sqrt(best_score)}\n')
+
+            # store in ningxiang output
+            self.ningxiang_output[tuple(curr_combo)] = np.sqrt(best_score)
+        
+        return self.ningxiang_output
 
     
 
@@ -76,10 +132,22 @@ class NingXiang:
         elif self.clf_type == 'Classification':
             rf = RandomForestClassifier(n_estimators = 100, max_depth = 12, max_features = 0.75, random_state = self._seed, ccp_alpha = 0, max_samples = 0.75)
         
+        print('Begin fitting Random Forest')
         # fit the model and get the feature importances
         rf.fit(self.train_x, self.train_y)
+        print('Finished fitting Random Forest')
         feature_importance = {self.train_x.columns[i]:rf.feature_importances_[i] for i in range(len(self.train_x.columns))}
 
+        # use handle (which can be used on its own) to generate the ningxiang output
+        self.ningxiang_output = self.get_rf_based_feature_combinations_from_feature_importance(feature_importance)
+
+        return self.ningxiang_output
+    
+
+
+    def get_rf_based_feature_combinations_from_feature_importance(self, feature_importance):
+        """ Takes in a dictionary of features:importance and returns feature importance"""
+        
         # sort features by feature importance (reversed order)
         feature_importance_sorted = self._sort_dict_reverse(feature_importance)
         # get the features in the output format that can be linked up with other JiaXing packages
