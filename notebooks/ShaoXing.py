@@ -6,8 +6,9 @@ import copy
 import pickle
 
 
+import statsmodels.api as sm
 from sklearn.metrics import r2_score, mean_absolute_percentage_error, mean_squared_error
-from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, balanced_accuracy_score
+from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, balanced_accuracy_score, plot_confusion_matrix
 
 
 
@@ -135,7 +136,6 @@ class ShaoXing:
         """ Reads in underlying model class object for tuning, and also read in what type of model it is and its name (arbitary) """
 
         assert type == 'Classification' or type == 'Regression' # check
-        assert model_class_type in ('Sklearn Tree', 'LGB')
 
         # record
         self._model_fitted = 0
@@ -338,13 +338,18 @@ class ShaoXing:
 
             self.regular_stats_df = pd.DataFrame({'Train': train_stats, 'Validation': val_stats, 'Test': test_stats}, index = regular_stats_index)
             self.CV_stats_df = pd.DataFrame({'CV Train': cv_train_stats, 'CV Test': cv_test_stats}, index = cv_stats_index)
-            
+              
+            X_res_corr, X_res_r2, X_res_Fstat_pval = self._get_X_predict_residuals()
+            x_res_df = self._get_xi_predict_residuals()
             
             if self._model_fit_time is not None:
                 print('Time taken to train model:', self._model_fit_time)
 
             display(self.regular_stats_df)
             display(self.CV_stats_df)
+            print('Residuals~X corr', X_res_corr, 'Residuals~X r2', X_res_r2, 'Residuals~X Fstat pval', X_res_Fstat_pval)
+            display(x_res_df)
+
             for data_type in ['Train', 'Val', 'Test']:
                 print(f'{data_type} Residual Plots')
                 for feature in self.features:
@@ -420,7 +425,7 @@ class ShaoXing:
 
             self.regular_stats_df = pd.DataFrame({'Train': train_stats, 'Validation': val_stats, 'Test': test_stats}, index = regular_stats_index)
             self.CV_stats_df = pd.DataFrame({'CV Train': cv_train_stats, 'CV Test': cv_test_stats}, index = cv_stats_index)
-            
+
             display(self.regular_stats_df)
             display(self.CV_stats_df)
 
@@ -437,6 +442,55 @@ class ShaoXing:
             address_split = address.split('.csv')[0]
             self.regular_stats_df.to_csv(f'{address_split}_regular.csv')
             self.CV_stats_df.to_csv(f'{address_split}_CV.csv')
+
+
+
+    def _get_X_predict_residuals(self):
+        """ Helper to get how well X can predict residuals """
+
+        if self.train_analyse_df is None:
+            self.train_analyse_df = pd.DataFrame({'obs': self.train_y, 'pred': self._train_pred})
+            self.train_analyse_df['residuals'] = self.train_analyse_df['obs'] - self.train_analyse_df['pred']
+        
+        X_res = sm.OLS(self.train_analyse_df[['residuals']], self.train_x).fit()
+
+        X_res_corr = np.sqrt(X_res.rsquared)
+        X_res_r2 = X_res._rsqaured
+        X_res_Fstat_pval = X_res.f_pvalue
+
+        return X_res_corr, X_res_r2, X_res_Fstat_pval
+
+    
+
+    def _get_xi_predict_residuals(self):
+        """ Helper to get correlation and p-value of each x_i and residuals"""
+
+        if self.train_analyse_df is None:
+            self.train_analyse_df = pd.DataFrame({'obs': self.train_y, 'pred': self._train_pred})
+            self.train_analyse_df['residuals'] = self.train_analyse_df['obs'] - self.train_analyse_df['pred']
+        
+        out_df = pd.DataFrame()
+        for col in list(self.train_x.columns):
+            x_res = sm.OLS(self.train_analyse_df[['residuals']], self.train_x[[col]]).fit()
+            
+            tmp_r2 = x_res.rsquared
+            tmp_corr = np.sqrt(x_res.rsquared) * self._sign(x_res.params[col])
+            tmp_Fstat_pval = x_res.f_pvalue
+
+            tmp = pd.DataFrame({'corr': tmp_corr, 'r2': tmp_r2, 'Fstat_pval': tmp_Fstat_pval})
+
+            out_df = out_df.append(tmp)
+
+        return out_df
+
+    
+
+    def _sign(self, val):
+        """ Helper for getting sign of a value """
+        if val >= 0:
+            return 1
+        else:
+            return -1
 
 
 
@@ -751,6 +805,29 @@ class ShaoXing:
             self.feature_importance_df = pd.DataFrame({'Features': self.model.feature_name(), 'Importance': self.model.feature_importance()})
             self.feature_importance_df['Importance'] = self.feature_importance_df['Importance']/sum(self.feature_importance_df['Importance'])
             self.feature_importance_df = self.feature_importance_df.sort_values('Importance', ascending=False)
+        
+        if self._model_class_type == 'OLS LR':
+            x_std = np.std(self.train_x) # get stdev of x
+            coef = self.model.params    # get coefficients of LR model
+
+            self.feature_importance_df = pd.DataFrame({'Features': list(self.train_x.columns), 'Importance': [x_std[feat] * coef[feat] for feat in self.train_x_columns]})
+            self.feature_importance_df = self.feature_importance_df.sort_values('Importance', ascending=False)
+        
+        if self._model_class_type == 'Sklearn linear kernel':
+            x_std = np.std(self.train_x) # get stdev of x
+            coef = self.model.coef_    # get coefficients of LR model
+            hyp = list(self.train_x.columns)
+
+            feature_importance = [0 for i in range(len(coef))]
+            for i in range(len(coef)): # for each 1v1 model
+                for j in range(len(coef[0])): # each coef - add
+                    feature_importance[j] += x_std[hyp[j]] * coef[i][j]
+                
+            feature_importance = [x/len(feature_importance) for x in feature_importance]
+
+
+            self.feature_importance_df = pd.DataFrame({'Features': list(self.train_x.columns), 'Importance': [x_std[feat] * coef[feat] for feat in self.train_x_columns]})
+            self.feature_importance_df = self.feature_importance_df.sort_values('Importance', ascending=False)
             
         display(self.feature_importance_df)
 
@@ -767,4 +844,3 @@ class ShaoXing:
             address_split = address.split('.png')[0]
             
             self.fig.savefig(f'{address_split}.png')
-
