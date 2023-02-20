@@ -229,8 +229,10 @@ class JiaoCheng:
         # update previous internal structures based on first set of hyperparameter choices
         ##here used numbers instead of tuples as the values in parameter_choices; thus need another mapping to get map back to the features
         self.parameter_choices['features'] = tuple([i for i in range(len(ningxiang_output_sorted))])
-        self._feature_combo_n_index_map = {i:list(ningxiang_output_sorted.keys())[i] for i in range(len(ningxiang_output_sorted))}
+        self._feature_combo_n_index_map = {i: list(ningxiang_output_sorted.keys())[i] for i in range(len(ningxiang_output_sorted))}
 
+        self.param_value_reverse_map = {param:{self.parameter_choices[param][j]:j for j in range(len(self.parameter_choices[param]))} for param in self.parameter_choices}
+        
         self.hyperparameters = list(self.parameter_choices.keys())
 
         # automatically calculate how many different values in each hyperparameter
