@@ -1,7 +1,35 @@
-# 08/01/2023
+# 20/02/2023
+
+
+
+
 
 import pandas as pd
 import copy
+
+
+
+
+
+def combine_tuning_results(tuning_results, output_address):
+    """ Combines multiple tuning result DataFrames into one DataFrame"""
+    
+    assert type(tuning_results) == list
+    assert len(tuning_results) > 1
+
+    columns = set(tuning_results[0].columns)
+    for tuning_result in tuning_results[1:]:
+        assert set(tuning_result.columns) == columns
+        
+
+    combined_tuning_results = pd.DataFrame()
+
+    for tuning_result in tuning_results:
+        combined_tuning_results = combined_tuning_results.append(tuning_result)
+    
+    output_address_split = output_address.split('.csv')[0]
+
+    tuning_result.to_csv(f'{output_address_split}.csv', index = False)
 
 
 
@@ -129,10 +157,19 @@ class YiLong:
             
             sorted_tuning_results = self.tuning_result.sort_values([interested_statistic], ascending = ascending)
 
+        
 
         sorted_tuning_results.index = range(len(sorted_tuning_results))
         best_hyperparameter_combination = {hyperparameter:sorted_tuning_results.iloc[0][hyperparameter] for hyperparameter in self.hyperparameters}
-        print('Best hyperameter combination:', best_hyperparameter_combination, '\n')
+
+        # change layout of output
+        out_best_hyperparameter_combination = [copy.deepcopy(best_hyperparameter_combination)]
+        if 'features' in out_best_hyperparameter_combination[0]:
+            out_best_hyperparameter_combination.extend([out_best_hyperparameter_combination[0]['features'], {'feature combo ningxiang score':out_best_hyperparameter_combination[0]['feature combo ningxiang score']}])
+            del out_best_hyperparameter_combination[0]['features']
+            del out_best_hyperparameter_combination[0]['feature combo ningxiang score']
+
+        print('Best hyperameter combination:', out_best_hyperparameter_combination, '\n')
 
         print(f'Highest {length}')
         display(sorted_tuning_results.head(length))
@@ -140,7 +177,7 @@ class YiLong:
         display(sorted_tuning_results.tail(length))
 
 
-        return best_hyperparameter_combination 
+        return out_best_hyperparameter_combination 
 
 
 
@@ -148,8 +185,11 @@ class YiLong:
         """ View the means of evaluation metrics for combinations containing each individual value of a hyperparameter – for each hyperparameter """
 
         for col in self.hyperparameters: # for each hyperparameter
+            
+            if col == 'features': # report NingXiang score only
+                    continue
 
-            print(col)
+            print('\nHYPERPARAMETER:', col.upper())
 
             hyperparameter_values = list(set(self.tuning_result[col]))
             hyperparameter_values.sort()
@@ -157,6 +197,7 @@ class YiLong:
             # create this temporary dataframe
             validation_score_df = pd.DataFrame()
             for value in hyperparameter_values: # for each value in the hyperparameter
+
                 tmp_df = self.tuning_result[self.tuning_result[col] == value] # select df with only those parameter values
 
                 # get means
@@ -183,13 +224,43 @@ class YiLong:
 
         for col in self.hyperparameters: # for each hyperparameter
 
-            print(col)
+            if col == 'features': # report NingXiang score only
+                    continue
+
+            print('\nHYPERPARAMETER:', col.upper())
 
             hyperparameter_values = list(set(self.tuning_result[col]))
             hyperparameter_values.sort()
             
             # create this temporary dataframe
             for value in hyperparameter_values: # for each value in the hyperparameter
+
+                print(f'{col} Value:', value)
+                tmp_df = self.tuning_result[self.tuning_result[col] == value] # select df with only those parameter values
+
+                if len(tmp_df) < 60:
+                    length = len(tmp_df)
+                else:
+                    length = 60
+
+                display(tmp_df.sample(length, replace=False, random_state=self._seed))
+        """ View all evaluation metrics for combinations grouped by containing each individual value of a hyperparameter – for each hyperparameter 
+        If any of the individual values of a hyperparameter exceeds 60, then sample down to 60 without replacement """
+
+        for col in self.hyperparameters: # for each hyperparameter
+
+            if col == 'features': # report NingXiang score only
+                    continue
+
+            print('\nHYPERPARAMETER:', col.upper())
+
+            hyperparameter_values = list(set(self.tuning_result[col]))
+            hyperparameter_values.sort()
+            
+            # create this temporary dataframe
+            for value in hyperparameter_values: # for each value in the hyperparameter
+
+                print(f'{col} Value:', value)
                 tmp_df = self.tuning_result[self.tuning_result[col] == value] # select df with only those parameter values
 
                 if len(tmp_df) < 60:
