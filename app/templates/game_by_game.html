@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{%block title %}Game by Game Prediction{% endblock %}
+
+{% block content %}
+    <p>
+        <a href = "{{ url_for('home') }}">Home</a>
+    </p>
+
+    <h1>{{date.year}} Game by Game Prediction</h1>
+    {% for round in table_list.keys %}
+        <p>{{round}}</p>
+        {% for game in table_list[round].keys %}:
+            <p>{{game}}</p>
+            <!-- {% for table in [table_list[round][game].to_html((classes='data', index=False))] %}
+                {{ table|safe }}
+            {% endfor %} -->
+        {% endfor %}
+    {% endfor%}
+    
+    
+    <h2> {{date.year}} Leaderboard</h2>
+    {% for table in tables %}
+        {{ table|safe }}
+    {% endfor %}
+    
+    <p>
+        <a href = "{{ url_for('home') }}">Home</a>
+    </p>
+    
+{% endblock %}
