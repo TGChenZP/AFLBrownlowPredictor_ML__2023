@@ -1023,9 +1023,11 @@ class YangZhouB:
 
         if self.parameter_choices is None:
             print("Missing parameter_choices to build parameter_value_map_index, please run set_hyperparameters() first")
-
+            return
+        
         if self.clf_type is None:
             print('Missing clf_type. Please run .read_in_model() first.')
+            return
 
         self.tuning_result = pd.read_csv(address)
         print(f"Successfully read in tuning result of {len(self.tuning_result)} rows")
@@ -1051,6 +1053,8 @@ class YangZhouB:
                     
                 else:
                     combo.append(self._parameter_value_map_index[hyperparam][row[1][hyperparam]])
+
+            combo = tuple(combo)
             
             self.checked[combo] = 1
             
