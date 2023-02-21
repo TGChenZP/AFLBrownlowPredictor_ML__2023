@@ -1,4 +1,8 @@
-# 15/02/2023
+# 21/02/2023
+
+
+
+
 
 import pandas as pd
 import numpy as np
@@ -68,6 +72,8 @@ class YangZhou:
         self._total_combos = None
         self._tune_features = False
         self._up_to = 0
+        self._n_cruise_coord = None
+        self._cruising_up_to = 0
         
         self.regression_extra_output_columns = ['Train r2', 'Val r2', 'Test r2', 
             'Train RMSE', 'Val RMSE', 'Test RMSE', 'Train MAPE', 'Val MAPE', 'Test MAPE', 'Time']
@@ -160,6 +166,9 @@ class YangZhou:
 
         tune_result_columns = copy.deepcopy(self.hyperparameters)
 
+        if self._tune_features:
+            tune_result_columns.append('feature combo ningxiang score')
+
         # Different set of metric columns for different types of models
         if self.clf_type == 'Classification':
             tune_result_columns.extend(self.classification_extra_output_columns)
@@ -198,6 +207,17 @@ class YangZhou:
         if not self.hyperparameters:
             print("Missing hyperparameter choices, please run .set_hyperparameters() first")
             return
+        
+        for feature in list(ningxiang_output.keys())[-1]:
+            if feature not in list(self.train_x.columns):
+                print(f'feature {feature} in ningxiang output is not in train_x. Please try again')
+                return
+            if feature not in list(self.val_x.columns):
+                print(f'feature {feature} in ningxiang output is not in val_x. Please try again')
+                return
+            if feature not in list(self.test_x.columns):
+                print(f'feature {feature} in ningxiang output is not in test_x. Please try again')
+                return
         
         # sort ningxiang just for safety, and store up
         ningxiang_output_sorted = self._sort_features(ningxiang_output)
@@ -250,6 +270,8 @@ class YangZhou:
 
         self._get_cruise_indices_values()
         self._generate_cruise_combinations() # first get cruise indicies, then use indicies to get combinations
+
+        self._n_cruise_coord = len(self._cruise_combinations)
 
 
 
@@ -374,8 +396,6 @@ class YangZhou:
     def _CruiseSystem(self):
         """ Helper that performs cruising """
 
-        print(f"Cruising: round {self._restarts}\n") 
-
         # get cruise combos in sorted order (furthest away from current max)
         sorted_cruise_combos = self._sort_cruise_combos(self.best_combo)
 
@@ -389,6 +409,9 @@ class YangZhou:
 
             # only search if it hasn't been cruised before (if has then is not an artifect of significance)
             if not self.been_cruised[tuple(cruise_combo)]:
+
+                self._cruising_up_to += 1
+                print(f'Cruising Coordrdinate {self._cruising_up_to} of {self._n_cruise_coord}\n')
                 
                 self.been_cruised[tuple(cruise_combo)] = 2 # actually been cruised
 
@@ -728,7 +751,7 @@ class YangZhou:
                 self._up_to += 1
                 self._train_and_test_combo(combo)
             else:
-                print(f'\tAlready Trained and Tested combination {combo}')
+                self._check_already_trained_best_score(combo)
 
         # perform welch test and return surrounding combos that should be used as new core
         new_cores = self._find_new_core(treatment, null, direction, core)
@@ -788,7 +811,7 @@ class YangZhou:
                     self._up_to += 1
                     self._train_and_test_combo(combo)
                 else:
-                    print(f'\tAlready Trained and Tested combination {combo}')
+                    self._check_already_trained_best_score(combo)
 
         # print information of this round 
 
@@ -832,7 +855,7 @@ class YangZhou:
                 self._train_and_test_combo(combo)
             
             else:
-                print(f'\tAlready Trained and Tested combination {combo}')
+                self._check_already_trained_best_score(combo)
         
 
         # SECOND: from the core combo, begin guidance system
@@ -847,6 +870,7 @@ class YangZhou:
 
         # THIRD: Recursively Cruise and restart Guide if find a combo that is within halfwidth of mean of best combo surrounds
         print("STAGE TWO: Begin Cruise system\n\n")
+        self._cruising_up_to = 0
         self._cruising = True
         while self._cruising:
             suspicious_case_combo = self._CruiseSystem()
@@ -876,6 +900,68 @@ class YangZhou:
 
         print('% Combos Checked:', int(sum(self.checked.reshape((np.prod(self.n_items))))), 'out of', np.prod(self.n_items), 'which is', f'{np.mean(self.checked).round(8)*100}%')
     
+
+
+    def tune_parallel(self, part, splits, key_stats_only = False):
+        """ Begin tuning in Parallel """
+
+        assert type(part) is int and type(splits) is int
+
+        if part <= 0 or part > splits:
+            print("Part must be within [1, splits]")
+            return
+
+        if self.train_x is None or self.train_y is None or self.val_x is None or self.val_y is None or self.test_x is None or self.test_y is None:
+            print(" Missing one of the datasets, please run .read_in_data() ")
+            return
+
+        if self.model is None:
+            print(" Missing model, please run .read_in_model() ")
+            return
+
+        if self.tuning_result_saving_address is None:
+            print("Missing tuning result csv saving address, please run ._save_tuning_result() first")
+
+        self.key_stats_only = key_stats_only
+
+        print("BEGIN TUNING\n\n") 
+        
+        # FIRST: get all cruise combinations as well as core, and tune all these
+        self._get_core()
+        self._get_cruise_combinations() 
+
+        first_round_combinations = copy.deepcopy(self._cruise_combinations)
+        first_round_combinations.append(self._core) 
+
+        random.seed(self._seed)
+        random.shuffle(first_round_combinations)
+
+        parallel_combo_to_tune = copy.deepcopy(first_round_combinations)
+        start_index = int((part-1)/splits * len(first_round_combinations))
+        end_index = int(part/splits * len(first_round_combinations))
+        parallel_combo_to_tune = parallel_combo_to_tune[start_index:end_index]
+
+        print(f'Parallel tuning part {part} of Cruise: set to tune {len(parallel_combo_to_tune)} combinations')
+
+        print("STAGE ZERO: Tune all Cruise combinations\n\n")
+        for combo in parallel_combo_to_tune:
+            
+            if not self.checked[tuple(combo)]:
+                self._up_to += 1
+                self._train_and_test_combo(combo)
+            
+            else:
+                self._check_already_trained_best_score(combo)
+
+
+        # Display final information
+        print(f"PARALLEL TUNING PART {part} OF CRUISE FINISHED\n")
+
+        print('Max Score: \n', self.best_score)
+        print('Max Combo: \n', self.best_combo)
+
+        print('% Combos Checked:', int(sum(self.checked.reshape((np.prod(self.n_items))))), 'out of', np.prod(self.n_items), 'which is', f'{np.mean(self.checked).round(8)*100}%')
+
 
 
     def _train_and_test_combo(self, combo):
@@ -929,8 +1015,6 @@ class YangZhou:
 
         # build output dictionary and save result
         df_building_dict = params
-        for nthp in self.non_tuneable_parameter_choices:
-            del params[nthp] 
 
 
         if self.clf_type == 'Regression':
@@ -1102,6 +1186,22 @@ class YangZhou:
 
 
 
+    def _check_already_trained_best_score(self, combo):
+        """ Helper for checking whether an already trained combo is best score """
+        
+        # update best score stats
+        if self.result[combo] > self.best_score: 
+            self.best_score = self.result[combo]
+            self.best_clf = None
+            print(f"As new Best Combo {combo} was read in, best_clf is set to None")
+            self.best_combo = combo
+
+        print(f'''Already Trained and Tested combination {combo}, which had val score of {np.round(self.result[combo],4)}
+        Current best combo: {self.best_combo} with val score {np.round(self.best_score, 4)}. 
+        Has trained {self._up_to} of {self._total_combos} combinations so far''')
+
+
+
     def _save_tuning_result(self):
         """ Helper to export tuning result csv """
 
@@ -1139,7 +1239,18 @@ class YangZhou:
 
             self._up_to += 1
     
-            combo = tuple([self.parameter_value_map_index[hyperparam][row[1][hyperparam]] for hyperparam in self.hyperparameters])
+            combo = list()
+            for hyperparam in self.hyperparameters:
+                if hyperparam == 'features':
+                    
+                    # reverse two dicts
+                    ningxiang_score_n_feature_dict = {self.feature_n_ningxiang_score_dict[key]:key for key in self.feature_n_ningxiang_score_dict}
+                    index_n_feature_combo_map = {self.feature_combo_n_index_map[key]:key for key in self.feature_combo_n_index_map}
+                    # special input
+                    combo.append(index_n_feature_combo_map[ningxiang_score_n_feature_dict[row[1]['feature combo ningxiang score']]])
+                    
+                else:
+                    combo.append(self._parameter_value_map_index[hyperparam][row[1][hyperparam]])
             
             self.checked[combo] = 1
             
@@ -1147,13 +1258,6 @@ class YangZhou:
                 self.result[combo] = row[1]['Val r2']
             elif self.clf_type == 'Classification':
                 self.result[combo] = row[1]['Val accu']
-        
-            # update best score stats
-            if self.result[combo] > self.best_score: 
-                self.best_score = self.result[combo]
-                self.best_clf = None
-                print(f"As new Best Combo {combo} is read in, best_clf is set to None")
-                self.best_combo = combo
 
 
     

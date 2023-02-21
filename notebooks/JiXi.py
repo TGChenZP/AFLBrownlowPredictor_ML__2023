@@ -1,4 +1,4 @@
-# 15/02/2023
+# 21/02/2023
 
 import pandas as pd
 import copy
@@ -63,7 +63,7 @@ class JiXi:
         self._new_combos = None
         self._parameter_value_map_index = None
         self._total_combos = None
-        self._tune_features = False
+        self._tune_features = None
 
         self.regression_extra_output_columns = ['Train r2', 'Val r2', 'Test r2', 
             'Train RMSE', 'Val RMSE', 'Test RMSE', 'Train MAPE', 'Val MAPE', 'Test MAPE', 'Time']
@@ -176,6 +176,9 @@ class JiXi:
 
         tune_result_columns = copy.deepcopy(self.hyperparameters)
 
+        if self._tune_features:
+            tune_result_columns.append('feature combo ningxiang score')
+
         # Different set of metric columns for different types of models
         if self.clf_type == 'Classification':
             tune_result_columns.extend(self.classification_extra_output_columns)
@@ -214,6 +217,17 @@ class JiXi:
         if not self.hyperparameters:
             print("Missing hyperparameter choices, please run .set_hyperparameters() first")
             return
+        
+        for feature in list(ningxiang_output.keys())[-1]:
+            if feature not in list(self.train_x.columns):
+                print(f'feature {feature} in ningxiang output is not in train_x. Please try again')
+                return
+            if feature not in list(self.val_x.columns):
+                print(f'feature {feature} in ningxiang output is not in val_x. Please try again')
+                return
+            if feature not in list(self.test_x.columns):
+                print(f'feature {feature} in ningxiang output is not in test_x. Please try again')
+                return
         
         # sort ningxiang just for safety, and store up
         ningxiang_output_sorted = self._sort_features(ningxiang_output)
@@ -477,7 +491,7 @@ class JiXi:
 
 
         
-    def tune(self, key_stats_only = False): #TODO
+    def tune(self, key_stats_only = False):
         """ Begin tuning """
 
         if self.train_x is None or self.train_y is None or self.val_x is None or self.val_y is None or self.test_x is None or self.test_y is None:
@@ -505,10 +519,63 @@ class JiXi:
                 self._train_and_test_combo(combo)
             
             else:
-                print(f'Already Trained and Tested combination {self._up_to}')
+                self._check_already_trained_best_score(combo)
 
         # Display final information
         print("TUNING FINISHED\n")
+
+        print('Max Score: \n', self.best_score)
+        print('Max Combo: \n', self.best_combo)
+
+        print('% Combos Checked:', int(sum(self.checked.reshape((np.prod(self.n_items))))), 'out of', np.prod(self.n_items), 'which is', f'{np.mean(self.checked).round(8)*100}%')
+
+
+
+    def tune_parallel(self, part, splits, key_stats_only = False):
+        """ Begin tuning in Parallel """
+
+        assert type(part) is int and type(splits) is int
+
+        if part <= 0 or part > splits:
+            print("Part must be within [1, splits]")
+            return
+
+        if self.train_x is None or self.train_y is None or self.val_x is None or self.val_y is None or self.test_x is None or self.test_y is None:
+            print(" Missing one of the datasets, please run .read_in_data() ")
+            return
+
+        if self.model is None:
+            print(" Missing model, please run .read_in_model() ")
+            return
+        
+        if self.combos is None:
+            print("Missing hyperparameter choices, please run .set_hyperparameters() first")
+            return
+
+        if self.tuning_result_saving_address is None:
+            print("Missing tuning result csv saving address, please run ._save_tuning_result() first")
+
+        self.key_stats_only = key_stats_only
+
+        parallel_combo_to_tune = copy.deepcopy(self.combos)
+        start_index = int((part-1)/splits * len(self.combo))
+        end_index = int(part/splits * len(self.combo))
+        parallel_combo_to_tune = parallel_combo_to_tune[start_index:end_index]
+
+        print(f'Parallel tuning part {part}: set to tune {len(parallel_combo_to_tune)} combinations')
+
+        for combo in self.parallel_combo_to_tune:
+
+            if not self.checked[tuple(combo)]:
+                
+                self._up_to += 1
+                self._train_and_test_combo(combo)
+            
+            else:
+                self._check_already_trained_best_score(combo)
+
+        # Display final information
+        print(f"PARALLEL TUNING PART {part} FINISHED\n")
 
         print('Max Score: \n', self.best_score)
         print('Max Combo: \n', self.best_combo)
@@ -568,8 +635,6 @@ class JiXi:
 
         # build output dictionary and save result
         df_building_dict = params
-        for nthp in self.non_tuneable_parameter_choices:
-            del params[nthp] 
 
 
         if self.clf_type == 'Regression':
@@ -740,6 +805,22 @@ class JiXi:
 
 
 
+    def _check_already_trained_best_score(self, combo):
+        """ Helper for checking whether an already trained combo is best score """
+        
+        # update best score stats
+        if self.result[combo] > self.best_score: 
+            self.best_score = self.result[combo]
+            self.best_clf = None
+            print(f"As new Best Combo {combo} was read in, best_clf is set to None")
+            self.best_combo = combo
+
+        print(f'''Already Trained and Tested combination {combo}, which had val score of {np.round(self.result[combo],4)}
+        Current best combo: {self.best_combo} with val score {np.round(self.best_score, 4)}. 
+        Has trained {self._up_to} of {self._total_combos} combinations so far''')
+
+
+
     def _save_tuning_result(self):
         """ Helper to export tuning result csv """
 
@@ -776,8 +857,19 @@ class JiXi:
         for row in self.tuning_result.iterrows():
 
             self._up_to += 1
-    
-            combo = tuple([self._parameter_value_map_index[hyperparam][row[1][hyperparam]] for hyperparam in self.hyperparameters])
+
+            combo = list()
+            for hyperparam in self.hyperparameters:
+                if hyperparam == 'features':
+                    
+                    # reverse two dicts
+                    ningxiang_score_n_feature_dict = {self.feature_n_ningxiang_score_dict[key]:key for key in self.feature_n_ningxiang_score_dict}
+                    index_n_feature_combo_map = {self.feature_combo_n_index_map[key]:key for key in self.feature_combo_n_index_map}
+                    # special input
+                    combo.append(index_n_feature_combo_map[ningxiang_score_n_feature_dict[row[1]['feature combo ningxiang score']]])
+                    
+                else:
+                    combo.append(self._parameter_value_map_index[hyperparam][row[1][hyperparam]])
             
             self.checked[combo] = 1
             
@@ -785,13 +877,6 @@ class JiXi:
                 self.result[combo] = row[1]['Val r2']
             elif self.clf_type == 'Classification':
                 self.result[combo] = row[1]['Val accu']
-        
-            # update best score stats
-            if self.result[combo] > self.best_score: 
-                self.best_score = self.result[combo]
-                self.best_clf = None
-                print(f"As new Best Combo {combo} is read in, best_clf is set to None")
-                self.best_combo = combo
 
 
     

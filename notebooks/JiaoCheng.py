@@ -1,4 +1,4 @@
-# 17/02/2023
+# 21/02/2023
 
 
 
@@ -219,6 +219,17 @@ class JiaoCheng:
             print("Missing hyperparameter choices, please run .set_hyperparameters() first")
             return
         
+        for feature in list(ningxiang_output.keys())[-1]:
+            if feature not in list(self.train_x.columns):
+                print(f'feature {feature} in ningxiang output is not in train_x. Please try again')
+                return
+            if feature not in list(self.val_x.columns):
+                print(f'feature {feature} in ningxiang output is not in val_x. Please try again')
+                return
+            if feature not in list(self.test_x.columns):
+                print(f'feature {feature} in ningxiang output is not in test_x. Please try again')
+                return
+        
         # sort ningxiang just for safety, and store up
         ningxiang_output_sorted = self._sort_features(ningxiang_output)
         self.feature_n_ningxiang_score_dict = ningxiang_output_sorted
@@ -356,13 +367,13 @@ class JiaoCheng:
 
                 for i in range(self.n_items[self._tuning_order_map_hp[hp]]):
                 
-                  if not self.checked[tuple(combo)]:
-                      self._up_to += 1
-                      self._train_and_test_combo(combo)
-                  else:
-                      print(f'Already Trained and Tested combination {self._up_to}, with val score {np.round(self.result[tuple(combo)], 4)}')
-                    
-                  combo[self._tuning_order_map_hp[hp]] += 1 
+                    if not self.checked[tuple(combo)]:
+                        self._up_to += 1
+                        self._train_and_test_combo(combo)
+                    else:
+                        self._check_already_trained_best_score(combo)
+                      
+                    combo[self._tuning_order_map_hp[hp]] += 1 
                 
                 starting_hp_combo = copy.deepcopy(self.best_combo) # take the best combo after this hyperparameter has been tuned
                 print('\nBest combo after this round:', starting_hp_combo, '\n')
@@ -433,8 +444,6 @@ class JiaoCheng:
 
         # build output dictionary and save result
         df_building_dict = params
-        for nthp in self.non_tuneable_parameter_choices:
-            del params[nthp] 
 
 
         if self.clf_type == 'Regression':
@@ -605,6 +614,22 @@ class JiaoCheng:
 
 
 
+    def _check_already_trained_best_score(self, combo):
+        """ Helper for checking whether an already trained combo is best score """
+        
+        # update best score stats
+        if self.result[combo] > self.best_score: 
+            self.best_score = self.result[combo]
+            self.best_clf = None
+            print(f"As new Best Combo {combo} was read in, best_clf is set to None")
+            self.best_combo = combo
+
+        print(f'''Already Trained and Tested combination {combo}, which had val score of {np.round(self.result[combo],4)}
+        Current best combo: {self.best_combo} with val score {np.round(self.best_score, 4)}. 
+        Has trained {self._up_to} of {self._total_combos} combinations so far''')
+
+
+
     def _save_tuning_result(self):
         """ Helper to export tuning result csv """
 
@@ -642,7 +667,18 @@ class JiaoCheng:
 
             self._up_to += 1
     
-            combo = tuple([self._parameter_value_map_index[hyperparam][row[1][hyperparam]] for hyperparam in self.hyperparameters])
+            combo = list()
+            for hyperparam in self.hyperparameters:
+                if hyperparam == 'features':
+                    
+                    # reverse two dicts
+                    ningxiang_score_n_feature_dict = {self.feature_n_ningxiang_score_dict[key]:key for key in self.feature_n_ningxiang_score_dict}
+                    index_n_feature_combo_map = {self.feature_combo_n_index_map[key]:key for key in self.feature_combo_n_index_map}
+                    # special input
+                    combo.append(index_n_feature_combo_map[ningxiang_score_n_feature_dict[row[1]['feature combo ningxiang score']]])
+                    
+                else:
+                    combo.append(self._parameter_value_map_index[hyperparam][row[1][hyperparam]])
             
             self.checked[combo] = 1
             
@@ -650,13 +686,6 @@ class JiaoCheng:
                 self.result[combo] = row[1]['Val r2']
             elif self.clf_type == 'Classification':
                 self.result[combo] = row[1]['Val accu']
-        
-            # update best score stats
-            if self.result[combo] > self.best_score: 
-                self.best_score = self.result[combo]
-                self.best_clf = None
-                print(f"As new Best Combo {combo} is read in, best_clf is set to None")
-                self.best_combo = combo
 
 
     
