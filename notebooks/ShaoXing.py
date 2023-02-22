@@ -16,7 +16,7 @@ from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_sc
 
 class ShaoXing:
 
-    def _init_(self):
+    def __init__(self):
         
         self._initialise_objects()
 
@@ -68,6 +68,7 @@ class ShaoXing:
         self.RESIDUAL_PLOT_OBJECTS = None
         self._RESIDUAL_ANALYSE_DF = None
         self.feature_importance_df = None
+        self.train_analyse_df = None
 
 
 
@@ -342,7 +343,7 @@ class ShaoXing:
             X_res_corr, X_res_r2, X_res_Fstat_pval = self._get_X_predict_residuals()
             x_res_df = self._get_xi_predict_residuals()
             
-            if self._model_fit_time is not None:
+            if not self._model_fit_time:
                 print('Time taken to train model:', self._model_fit_time)
 
             display(self.regular_stats_df)
@@ -448,14 +449,14 @@ class ShaoXing:
     def _get_X_predict_residuals(self):
         """ Helper to get how well X can predict residuals """
 
-        if self.train_analyse_df is None:
-            self.train_analyse_df = pd.DataFrame({'obs': self.train_y, 'pred': self._train_pred})
-            self.train_analyse_df['residuals'] = self.train_analyse_df['obs'] - self.train_analyse_df['pred']
+        
+        self.train_analyse_df = pd.DataFrame({'obs': self.train_y, 'pred': self._train_pred})
+        self.train_analyse_df['residuals'] = self.train_analyse_df['obs'] - self.train_analyse_df['pred']
         
         X_res = sm.OLS(self.train_analyse_df[['residuals']], self.train_x).fit()
 
         X_res_corr = np.sqrt(X_res.rsquared)
-        X_res_r2 = X_res._rsqaured
+        X_res_r2 = X_res.rsquared
         X_res_Fstat_pval = X_res.f_pvalue
 
         return X_res_corr, X_res_r2, X_res_Fstat_pval
@@ -465,9 +466,8 @@ class ShaoXing:
     def _get_xi_predict_residuals(self):
         """ Helper to get correlation and p-value of each x_i and residuals"""
 
-        if self.train_analyse_df is None:
-            self.train_analyse_df = pd.DataFrame({'obs': self.train_y, 'pred': self._train_pred})
-            self.train_analyse_df['residuals'] = self.train_analyse_df['obs'] - self.train_analyse_df['pred']
+        self.train_analyse_df = pd.DataFrame({'obs': self.train_y, 'pred': self._train_pred})
+        self.train_analyse_df['residuals'] = self.train_analyse_df['obs'] - self.train_analyse_df['pred']
         
         out_df = pd.DataFrame()
         for col in list(self.train_x.columns):
@@ -477,7 +477,7 @@ class ShaoXing:
             tmp_corr = np.sqrt(x_res.rsquared) * self._sign(x_res.params[col])
             tmp_Fstat_pval = x_res.f_pvalue
 
-            tmp = pd.DataFrame({'corr': tmp_corr, 'r2': tmp_r2, 'Fstat_pval': tmp_Fstat_pval})
+            tmp = pd.DataFrame({'corr': [tmp_corr], 'r2': [tmp_r2], 'Fstat_pval': [tmp_Fstat_pval]})
 
             out_df = out_df.append(tmp)
 
@@ -497,17 +497,14 @@ class ShaoXing:
     def _quantily_stats(self, n_quantiles):
         """ Helper to get quantily splitted statistics for the model (for Regression and GLM) """
     
-        if self.train_analyse_df is None:
-            self.train_analyse_df = pd.DataFrame({'obs': self.train_y, 'pred': self._train_pred})
-            self.train_analyse_df['residuals'] = self.train_analyse_df['obs'] - self.train_analyse_df['pred']
+        self.train_analyse_df = pd.DataFrame({'obs': self.train_y, 'pred': self._train_pred})
+        self.train_analyse_df['residuals'] = self.train_analyse_df['obs'] - self.train_analyse_df['pred']
         
-        if self.val_analyse_df is None:    
-            self.val_analyse_df = pd.DataFrame({'obs': self.val_y, 'pred': self._val_pred})
-            self.val_analyse_df['residuals'] = self.val_analyse_df['obs'] - self.val_analyse_df['pred']
+        self.val_analyse_df = pd.DataFrame({'obs': self.val_y, 'pred': self._val_pred})
+        self.val_analyse_df['residuals'] = self.val_analyse_df['obs'] - self.val_analyse_df['pred']
         
-        if self.test_analyse_df is None:
-            self.test_analyse_df = pd.DataFrame({'obs': self.test_y, 'pred': self._test_pred})
-            self.test_analyse_df['residuals'] = self.test_analyse_df['obs'] - self.test_analyse_df['pred']
+        self.test_analyse_df = pd.DataFrame({'obs': self.test_y, 'pred': self._test_pred})
+        self.test_analyse_df['residuals'] = self.test_analyse_df['obs'] - self.test_analyse_df['pred']
         
         quantiles_p = [i/n_quantiles for i in range(n_quantiles+1)]
 
@@ -718,7 +715,7 @@ class ShaoXing:
 
     def _get_residual_plots(self):    
         """ Helper to get scatter plots of residuals to each of the features """
-    
+        
         self._train_residual_analyse_df = self.train_x.T.append(self.train_analyse_df.T).T
         self._val_residual_analyse_df = self.val_x.T.append(self.val_analyse_df.T).T
         self._test_residual_analyse_df = self.test_x.T.append(self.test_analyse_df.T).T
@@ -783,7 +780,7 @@ class ShaoXing:
         """ Displays the model analysis statistics """
 
         if self._model_fit_time is not None:
-                print('Time taken to train model:', self._model_fit_time)
+            print('Time taken to train model:', self._model_fit_time)
         display(self.regular_stats_df)
         display(self.CV_stats_df)
 
