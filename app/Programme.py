@@ -18,13 +18,18 @@ def home():
 
 @app.route("/scrape_data")
 def scrape_data():
-    subprocess.run(f'python ../scripts/crawl_scrape.py {date.today().year}')
-    subprocess.run(f'python ../scripts/process_data.py {date.today().year}')
+    subprocess.run(f'python crawl_scrape.py {date.today().year}', shell=True, cwd = '../scripts')
+    print('Finished Crawling')
+    subprocess.run(f'python process_data.py {date.today().year}', shell=True, cwd = '../scripts')
+
+    return render_template('home.html', date = date.today(), tables=[read_leaderboard().to_html(classes='data', index=False)])
 
 
 @app.route("/run_predictions")
 def run_predictions():
-    subprocess.run(f'python ../scripts/predict.py {date.today().year}')
+    subprocess.run(f'python predict.py {date.today().year}', shell=True, cwd = '../scripts')
+
+    return render_template('home.html', date = date.today(), tables=[read_leaderboard().to_html(classes='data', index=False)])
 
 
 @app.route("/view_game_by_game_prediction")
@@ -35,4 +40,5 @@ def view_game_by_game_prediction():
 
 @app.route("/view_algo_description")
 def view_algo_description():
+
     return render_template("algo_description.html")

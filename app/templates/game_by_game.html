@@ -3,20 +3,27 @@
 {%block title %}Game by Game Prediction{% endblock %}
 
 {% block content %}
+
+    <h1>{{date.year}} Game by Game Prediction</h1>
     <p>
         <a href = "{{ url_for('home') }}">Home</a>
     </p>
-
-    <h1>{{date.year}} Game by Game Prediction</h1>
-    {% for round in table_list.keys %}
-        <p>{{round}}</p>
-        {% for game in table_list[round].keys %}:
-            <p>{{game}}</p>
-            <!-- {% for table in [table_list[round][game].to_html((classes='data', index=False))] %}
-                {{ table|safe }}
-            {% endfor %} -->
-        {% endfor %}
-    {% endfor%}
+    {% for round in table_list %}
+        <tr>
+            <b>{{ round }} <br></b>
+            {% for game in table_list[round] %}
+                <tr>
+                    {{ game }} <br>
+                    {{ table_list[round][game].to_html(classes='data', index=False)|safe }}
+                    <br>
+                </tr>
+            {% endfor %}
+            <p>
+                <a href = "{{ url_for('home') }}">Home</a>
+            </p>
+            <br>
+        </tr>
+    {% endfor %}
     
     
     <h2> {{date.year}} Leaderboard</h2>

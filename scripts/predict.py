@@ -32,7 +32,7 @@ model1_COLS = [x for x in model1_COLS if x not in ['3', '2', '1']]
 
 manip_type = 'NormalisedData'
 
-csv_list = os.listdir(f'../data/curated/{manip_type}')
+csv_list = os.listdir(f'../future data/curated/{manip_type}')
 csv_list.sort()
 
 def predict_brownlow(csv_list):
@@ -53,7 +53,7 @@ def predict_brownlow(csv_list):
             team2 = file.split()[5]
             game = team1 + ' v ' + team2
 
-            data = pd.read_csv(f'../data/curated/{manip_type}/{file}')
+            data = pd.read_csv(f'../future data/curated/{manip_type}/{file}')
 
             player = data['Player']
             pred3 = model3.predict(data[model3_COLS])

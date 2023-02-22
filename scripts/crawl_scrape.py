@@ -29,16 +29,16 @@ def scrape(url):
     
     
     
-    # Get Brownlow votes data (but input is later)
-    brownlow = list() #Mechanism to prevent non-assignment because some pages don't have bronwlow data
-    for i in range(len(rows)):
-        if re.search(r'Brownlow Votes:', str(rows[i])):
-            brownlow = rows[i]
-    if brownlow:
-        players = brownlow.find_all('a')
-        brownlow = list()
-        for player in players:
-            brownlow.append(re.findall(r'>. .+<', str(player))[0].strip('<>'))
+    # # Get Brownlow votes data (but input is later)
+    # brownlow = list() #Mechanism to prevent non-assignment because some pages don't have bronwlow data
+    # for i in range(len(rows)):
+    #     if re.search(r'Brownlow Votes:', str(rows[i])):
+    #         brownlow = rows[i]
+    # if brownlow:
+    #     players = brownlow.find_all('a')
+    #     brownlow = list()
+    #     for player in players:
+    #         brownlow.append(re.findall(r'>. .+<', str(player))[0].strip('<>'))
     
     
     
@@ -190,48 +190,48 @@ def scrape(url):
     elif team2 == 'Bulldogs':
         team2 = 'WesternBulldogs'
 
-    if f'./Data/NormalisedData/{Year} Round {Round} {team1} v {team2} (N).csv' in PROCESSED_FILELIST:
+    if f'../future data/NormalisedData/{Year} Round {Round} {team1} v {team2} (N).csv' in PROCESSED_FILELIST:
         return False, False, False
     
     # Add Brownlow Data into our dataframe as a column
     team1playerlist = gamestatscol1[0]
     team2playerlist = gamestatscol2[0]
     
-    if brownlow:
-        brownlow[0] = shorten_surname(brownlow[0])
-        brownlow[1] = shorten_surname(brownlow[1])
-        brownlow[2] = shorten_surname(brownlow[2])
+    # if brownlow:
+    #     brownlow[0] = shorten_surname(brownlow[0])
+    #     brownlow[1] = shorten_surname(brownlow[1])
+    #     brownlow[2] = shorten_surname(brownlow[2])
         
-        brownlowdict = {brownlow[0]: 3, brownlow[1]:2, brownlow[2]: 1}
-    else:
-        brownlowdict = dict()
+    #     brownlowdict = {brownlow[0]: 3, brownlow[1]:2, brownlow[2]: 1}
+    # else:
+    #     brownlowdict = dict()
     
-    brownlowteam1 = list()
-    brownlowteam1.append('Brownlow Votes')
-    for i in range(1, len(team1playerlist)):
-        if nametransf(team1playerlist[i]) in brownlowdict:
-            brownlowteam1.append(brownlowdict[nametransf(team1playerlist[i])])
-        else:
-            brownlowteam1.append(0)
-    gamestatscol1.append(brownlowteam1)
+    # brownlowteam1 = list()
+    # brownlowteam1.append('Brownlow Votes')
+    # for i in range(1, len(team1playerlist)):
+    #     if nametransf(team1playerlist[i]) in brownlowdict:
+    #         brownlowteam1.append(brownlowdict[nametransf(team1playerlist[i])])
+    #     else:
+    #         brownlowteam1.append(0)
+    # gamestatscol1.append(brownlowteam1)
 
-    brownlowteam2 = list()
-    brownlowteam2.append('Brownlow Votes')
-    for i in range(1, len(team2playerlist)):
-        if nametransf(team2playerlist[i]) in brownlowdict:
-            brownlowteam2.append(brownlowdict[nametransf(team2playerlist[i])])
-        else:
-            brownlowteam2.append(0)
-    gamestatscol2.append(brownlowteam2)
+    # brownlowteam2 = list()
+    # brownlowteam2.append('Brownlow Votes')
+    # for i in range(1, len(team2playerlist)):
+    #     if nametransf(team2playerlist[i]) in brownlowdict:
+    #         brownlowteam2.append(brownlowdict[nametransf(team2playerlist[i])])
+    #     else:
+    #         brownlowteam2.append(0)
+    # gamestatscol2.append(brownlowteam2)
     
     
     # Print games where there is an error in Brownlow Votes (i.e. Total brownlow votes does not add up to 1+2+3 = 6)
     # This is a warning mechanism
-    if (sum(brownlowteam1[1:]) + sum(brownlowteam2[1:])) != 6:
-        print(f'{Year} {Round} {team1} v {team2}: {sum(brownlowteam1[1:]) + sum(brownlowteam2[1:])}')
-        if brownlow:
-            print(brownlowdict)
-        print('\n')
+    # if (sum(brownlowteam1[1:]) + sum(brownlowteam2[1:])) != 6:
+    #     print(f'{Year} {Round} {team1} v {team2}: {sum(brownlowteam1[1:]) + sum(brownlowteam2[1:])}')
+    #     if brownlow:
+    #         print(brownlowdict)
+    #     print('\n')
     
     
     return gamestatscol1, gamestatscol2, (Year, Round, team1, team2)
@@ -405,15 +405,15 @@ def save(lst, metadata, datatype):
     for i in range(1, len(lst)):
         df.insert(column = lst[i][0], value = lst[i][1:len(lst[0])], loc = i)
     
-    if not os.path.exists(f'./data/raw/{DICT[datatype]}'):
-            os.mkdirs(f'./data/raw/{DICT[datatype]}')
+    if not os.path.exists(f'../future data/raw/{DICT[datatype]}'):
+            os.makedirs(f'../future data/raw/{DICT[datatype]}')
     
-    df.to_csv(f'./data/raw/{DICT[datatype]}/{metadata[0]} {metadata[1]} {metadata[2]} v {metadata[3]} ({datatype}).csv', index = False)
+    df.to_csv(f'../future data/raw/{DICT[datatype]}/{metadata[0]} {metadata[1]} {metadata[2]} v {metadata[3]} ({datatype}).csv', index = False)
 
 
 # Crawler
 base_url = 'https://www.footywire.com/afl/footy/'
-years = range(int(sys.argv[1]), int(sys.argv[1]+1))
+years = range(int(sys.argv[1]), int(sys.argv[1])+1)
 
 urllist = list()
 
@@ -430,8 +430,10 @@ for year in years:
     
     time.sleep(random.uniform(0.5, 5))
 
-
-PROCESSED_FILELIST = os.listdir(f'./NormalisedData')
+try:
+    PROCESSED_FILELIST = os.listdir(f'../future data/curated/NormalisedData')
+except:
+    PROCESSED_FILELIST = []
 
 # Scraper
 for year in urllist:

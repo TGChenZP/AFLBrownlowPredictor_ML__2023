@@ -23,4 +23,15 @@ def read_game_by_game_prediction():
             tmp_df = pd.DataFrame({'Votes': VOTES, 'Player': players})
             new_out[round][game] = tmp_df
     
+    new_out = sort_by_round(new_out)
+
     return new_out
+
+
+def sort_by_round(new_out):
+
+    tmp = [(int(key.split()[1]),new_out[key]) for key in new_out]
+    tmp.sort(key = lambda x:x[0])
+    out = {f'Round {x[0]}':x[1] for x in tmp}
+
+    return out

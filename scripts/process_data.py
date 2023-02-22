@@ -5,18 +5,26 @@ import sys
 choice = 'OriginalData'
 
 # Grabs a list of the files
-filelist = os.listdir(f'./data/{choice}')
-filelist = [file for file in filelist if file[:4] == str(sys.argv[0])]
+filelist = os.listdir(f'../future data/raw/{choice}')
+filelist = [file for file in filelist if file[:4] == str(sys.argv[1])]
 # Remove the first file (an ipynb checkpoint file)
 filelist.sort()
 
-processed_filelist = os.listdir(f'./NormalisedData')
+try:
+    processed_filelist = os.listdir(f'../future data/raw/NormalisedData')
+except:
+    processed_filelist = list()
 
-filelist = [file for file in filelist if f'./Data/NormalisedData/{file.strip("(O).csv")} (N).csv' not in processed_filelist]
+filelist = [file for file in filelist if f'../future data/raw/NormalisedData/{file.strip("(O).csv")} (N).csv' not in processed_filelist]
 
+if not os.path.exists(f'../future data/curated/OriginalData_AddDerived'):
+    os.makedirs(f'../future data/curated/OriginalData_AddDerived')
+
+if not os.path.exists(f'../future data/curated/NormalisedData'):
+    os.makedirs(f'../future data/curated/NormalisedData')
 
 for file in filelist:
-    df = pd.read_csv(f'./data/{choice}/{file}')
+    df = pd.read_csv(f'../future data/raw/{choice}/{file}')
     
     df['Uncontested Marks'] = df['Marks'].sub(df['Contested Marks'])
     df['Marks Outside 50'] = df['Marks'].sub(df['Marks Inside 50'])
@@ -27,7 +35,7 @@ for file in filelist:
     
     df = df.drop('Disposal Efficiency %', axis = 1)
     
-    df.to_csv(f'./data/OriginalData_AddDerived/{file}', index = False)
+    df.to_csv(f'../future data/curated/OriginalData_AddDerived/{file}', index = False)
 
 
 
@@ -88,7 +96,7 @@ def norm_OT_inv(df, colname):
     return out
 
 
-filelist = os.listdir(f'./Data/OriginalData_AddDerived')
+filelist = os.listdir(f'../future data/curated/OriginalData_AddDerived')
 filelist = [file for file in filelist if file[:4] == str(sys.argv[1])]
 filelist.sort()
 
@@ -113,7 +121,7 @@ invert = ['Clangers', 'Turnovers', 'Frees Agains']
 
 for file in filelist:
     
-    df = pd.read_csv(f'./Data/OriginalData_AddDerived/{file}')
+    df = pd.read_csv(f'../future data/curated/OriginalData_AddDerived/{file}')
     
     
     norm = pd.DataFrame()
@@ -137,4 +145,4 @@ for file in filelist:
             print(column)
     
     
-    norm.to_csv(f'./Data/NormalisedData/{file.strip("(O).csv")} (N).csv', index=False)
+    norm.to_csv(f'../future data/curated/NormalisedData/{file.strip("(O).csv")} (N).csv', index=False)
