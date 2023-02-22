@@ -75,6 +75,7 @@ class ZhongShan:
 
         self._initialise_objects()
 
+        print('ZhongShan Initialised')
 
 
     def _initialise_objects(self):
@@ -105,10 +106,10 @@ class ZhongShan:
         self.cont_scatter_plot = None
         self.cat_scatter_plot = None
         self.final_features = None
-        self.feature_selected_full_data = None
-        self.feature_selected_train_data = None
-        self.feature_selected_val_data = None
-        self.feature_selected_test_data = None
+        self.feature_selected_full_data = dict()
+        self.feature_selected_train_data = dict()
+        self.feature_selected_val_data = dict()
+        self.feature_selected_test_data = dict()
 
 
     
@@ -261,6 +262,15 @@ class ZhongShan:
 
         print(f'Successfully set feature columns, consisting {len(self.feature_columns)} columns')
         print(f'Successfully set retained columns, consisting {len(self.retained_columns)} columns')
+
+        for label in self.label_columns:
+
+            discarded_labels = [col for col in self.label_columns if col != label]
+            
+            self.feature_selected_full_data[label] = copy.deepcopy(self.full_data[[col for col in self.retained_columns if col not in discarded_labels]])
+            self.feature_selected_train_data[label] = copy.deepcopy(self.train_data[[col for col in self.retained_columns if col not in discarded_labels]])
+            self.feature_selected_val_data[label] = copy.deepcopy(self.val_data[[col for col in self.retained_columns if col not in discarded_labels]])
+            self.feature_selected_test_data[label] = copy.deepcopy(self.test_data[[col for col in self.retained_columns if col not in discarded_labels]])
 
 
 
@@ -561,7 +571,11 @@ class ZhongShan:
 
         self.final_ncomponents = final_ncomponents
         print(f'Using first {final_ncomponents} PCA components')
-
+        self.retained_columns = self.retained_columns[:-len(self.label_columns)]
+        self.retained_columns.extend([f'PCA {i}' for i in range(self.final_ncomponents)])
+        for label in self.label_columns:
+            self.retained_columns.append(label)
+        
 
 
     def pca_transform(self, df_name): 
@@ -584,6 +598,10 @@ class ZhongShan:
 
                 for i in range(self.final_ncomponents):
                     self.full_data[f'PCA {i}'] = pca_output[f'PCA {i}']
+                
+                for label in self.label_columns:
+                    discarded_labels = [col for col in self.label_columns if col != label]
+                    self.feature_selected_full_data[label] = copy.deepcopy(self.full_data[[col for col in self.retained_columns if col not in discarded_labels]])
 
         elif df_name == 'Train':
             if self.train_data is None:
@@ -597,6 +615,10 @@ class ZhongShan:
 
                 for i in range(self.final_ncomponents):
                     self.train_data[f'PCA {i}'] = pca_output[f'PCA {i}']
+                
+                for label in self.label_columns:
+                    discarded_labels = [col for col in self.label_columns if col != label]
+                    self.feature_selected_train_data[label] = copy.deepcopy(self.train_data[[col for col in self.retained_columns if col not in discarded_labels]])
 
         elif df_name == 'Validate':
             if self.val_data is None:
@@ -610,6 +632,10 @@ class ZhongShan:
 
                 for i in range(self.final_ncomponents):
                     self.val_data[f'PCA {i}'] = pca_output[f'PCA {i}']
+                
+                for label in self.label_columns:
+                    discarded_labels = [col for col in self.label_columns if col != label]
+                    self.feature_selected_validate_data[label] = copy.deepcopy(self.validate_data[[col for col in self.retained_columns if col not in discarded_labels]])
 
         elif df_name == 'Test':
             if self.test_data is None:
@@ -623,9 +649,13 @@ class ZhongShan:
 
                 for i in range(self.final_ncomponents):
                     self.test_data[f'PCA {i}'] = pca_output[f'PCA {i}']
+                
+                for label in self.label_columns:
+                    discarded_labels = [col for col in self.label_columns if col != label]
+                    self.feature_selected_test_data[label] = copy.deepcopy(self.test_data[[col for col in self.retained_columns if col not in discarded_labels]])
     
         print(f'PCA transformed {df_name} Data, PLEASE REMEMBER TO USE .pca_update_features() to update feature_columns')
-        
+  
 
 
     def pca_transform_all(self):
@@ -1023,11 +1053,6 @@ class ZhongShan:
             print("Please run .set_columns() before re-attempting")
             return
 
-        self.feature_selected_full_data = dict()
-        self.feature_selected_train_data = dict()
-        self.feature_selected_val_data = dict()
-        self.feature_selected_test_data = dict()
-
         for label in self.label_columns:
             feature_columns = self.final_features[label]
             feature_columns.append(label)
@@ -1036,6 +1061,30 @@ class ZhongShan:
             self.feature_selected_train_data[label] = self.train_data[feature_columns]
             self.feature_selected_val_data[label] = self.val_data[feature_columns]
             self.feature_selected_test_data[label] = self.test_data[feature_columns]
+    
+    
+
+    def lazypred(self, label, model_type):
+        """ Perform LazyPredict """
+        
+        if model_type not in ('Regression', 'Classification'):
+            print('model_type must be Regression or Classification')
+        
+        train_data = self.feature_selected_train_data[label]
+        train_x = train_data.drop([label], axis = 1)
+        train_y = train_data[label]
+
+        if model_type == 'Regression':
+            reg = LazyRegressor(verbose=0,ignore_warnings = True, custom_metric=None)
+            
+            models, predictions = reg.fit(train_x, train_y)
+            display(models)
+
+        elif model_type == 'Classification':
+            classifier = LazyClassifier(verbose=0,ignore_warnings = True, custom_metric=None)
+            
+            models, predictions = classifier.fit(train_x, train_y)
+            display(models)
 
 
 
@@ -1081,209 +1130,3 @@ class ZhongShan:
 
         with open(f'{address}.pickle', 'wb') as f:
             pickle.dump(sanmin_components, f)
-
-
-
-
-
-class SanMin:
-
-    def __init__(self, input, input_type):
-        
-        if input_type not in ('ZhongShan', 'Components'):
-            print('input_type must be either "ZhongShan" or "Components"')
-            return 
-
-        if input_type == 'ZhongShan':
-            self.OHE_storage = copy.deepcopy(input.OHE_storage)
-            self.pca = copy.deepcopy(input.pca)
-            self.final_ncomponents = copy.deepcopy(input.final_ncomponents)
-            self.standardiser_objects = copy.deepcopy(input.standardiser_objects)
-            self.final_features = copy.deepcopy(input.final_features)
-            self.retained_columns = copy.deepcopy(input.retained_columns)
-            self.label_columns = copy.deepcopy(input.label_columns)
-            self.abs_corr_matrix = copy.deepcopy(input.abs_corr_matrix)
-            self.NMI_matrix = copy.deepcopy(input.NMI_matrix)
-            
-        elif input_type == 'Components':
-
-            with open(f'{input}', 'rb') as f:
-                sanmin_components = pickle.load(f)
-            
-            self.OHE_storage = sanmin_components['OHE_storage']
-            self.pca = sanmin_components['OHE_storage']
-            self.final_ncomponents = sanmin_components['final_ncomponents']
-            self.standardiser_objects = sanmin_components['standardiser_objects']
-            self.final_features = sanmin_components['final_features']
-            self.retained_columns = sanmin_components['retained_columns']
-            self.label_columns = sanmin_components['label_columns']
-            self.abs_corr_matrix = sanmin_components['abs_corr_matrix']
-            self.NMI_matrix = sanmin_components['NMI_matrix']
-        
-
-        self.feature_selected_future_data = None
-
-
-
-    def import_future_data(self, future_data, toggle_index = True):
-        """ Read in Future Data for transformation """
-
-        self.future_data = future_data
-
-        if toggle_index:
-            self.future_data = self.reset_index(self.future_data)
-            print('Reset index successful')
-        else:
-            print('Did not reset index upon request')
-
-
-
-    def export_data(self, label, address, index=False):
-        """ export the manipulated future data """
-
-        if self.feature_selected_future_data is None:
-            print('Please run .get_feature_selected_data() before re-attempting')
-            return
-        
-        address_split = address.split('.csv')[0]
-        
-        self.feature_selected_future_data[label].to_csv(f'{address_split}.csv', index=index)
-
-
-
-    def standardise_transform(self):
-        """ Transform data using pre-fitted standardiser """
-
-        if self.standardiser_objects is None:
-            print("No standardiser in this SanMin")
-            return
-
-        if self.future_data is None:
-            print("Please input Future Data before using this function")
-            return
-        else:
-            for col in self.retained_columns:
-                standardiser = self.standardiser_objects[col]
-                standardiser_output = standardiser.transform(self.future_data[[col]])
-                standardiser_list_output = [x[0] for x in standardiser_output]
-
-                self.future_data[col] = standardiser_list_output
-
-        print(f'Standardised all retained columns in Future Data')
-    
-
-
-    def fill_na(self, fill_value=0): 
-        """ Helper to fill na values in data with default value 0 """
-
-        if self.future_data is None:
-            print("Please input Future Data before using this function")
-            return
-        else:
-            self.future_data = self.future_data.fillna(fill_value)
-        
-        print(f'Filled null values on Future Data dataset with {fill_value}')
-
-
-
-    def one_hot_encode_transform(self, col_to_ohe): 
-        """ OHE transform one column of data using pre-trained OHE object """
-
-        if self.OHE_storage is None:
-            print("No OHE in this SanMin")
-            return
-        
-        if col_to_ohe not in self.OHE_storage:
-            print(f"No OHE of this column in this SanMin")
-
-        if self.future_data is None:
-            print("Please input Full Data before using this function")
-            return
-
-        else:
-            OHE_output = pd.DataFrame.sparse.from_spmatrix(\
-                self.OHE_storage[col_to_ohe]['OHE_object'].transform(self.future_data[[col_to_ohe]]))
-
-            for i in range(len(self.OHE_storage[col_to_ohe]['output_col_names'])):
-                self.future_data[self.OHE_storage[col_to_ohe]['output_col_names'][i]] = list(OHE_output[i])
-            
-            self.future_data = self.future_data.drop([col_to_ohe], axis = 1)
-        
-        print(f"OHE'ed and Dropped '{col_to_ohe}' column on Future Data")
-
-
-
-    def pca_transform(self): 
-        """ PCA transform data using pre-trained PCA object """
-
-        if self.pca is None:
-            print("No PCA object in this SanMin")
-            return
-
-        if self.future_data is None:
-            print("Please input Future Data before using this function")
-            return
-        else:
-            pca_tmp = self.pca.transform(self.future_data[self.feature_columns])
-        
-            pca_output = pd.DataFrame(pca_tmp)
-            pca_output.columns = [f'PCA {i}' for i in range(self.pca_n_components)]
-
-            for i in range(self.final_ncomponents):
-                self.future_data[f'PCA {i}'] = pca_output[f'PCA {i}']
-
-        print(f'PCA transformed Future Data, PLEASE REMEMBER TO USE .pca_update_features() to update feature_columns')
-            
-
-
-    def get_feature_selected_data(self):
-        """ Apply the pre-selected columns to Future Data data """
-
-        if self.future_data is None:
-            print("Please input Future Data")
-            return
-
-        if self.feature_columns is None:
-            print("Please run .set_columns() before re-attempting")
-            return
-
-        self.feature_selected_future_data = dict()
-
-        for label in self.feature_columns:
-            feature_columns = self.final_features[label]
-            feature_columns.append(label)
-            
-            self.feature_selected_future_data[label] = self.future_data[feature_columns]
-
-    
-
-    def view_abs_corr_matrix(self):
-        """ View the absolute correlation matrix """
-
-        if self.abs_corr_matrix is None:
-            print('The ZhongShan object which produced this SanMin did not have run .get_abs_corr()')
-            return
-
-        display(self.abs_corr_matrix)
-
-
-
-    def view_nmi_matrix(self):
-        """ View the NMI matrix """
-
-        if self.NMI_matrix is None:
-            print('The ZhongShan object which produced this SanMin did not have run .get_nmi()')
-            print('Please run .get_nmi() before re-attempting')
-            return
-
-        display(self.NMI_matrix)
-
-
-
-    def export_SanMin(self, address):
-        """ Exports SanMin object """
-    
-        address_split = address.split('.pickle')[0]
-
-        with open(f'{address_split}.pickle', 'wb') as f:
-            pickle.dump(self, f)
