@@ -9,4 +9,6 @@ data/curated/OriginalData_AddDerived/.DS_Store
 .idea/BrownlowPredictorPlus.iml
 models/AFL_pipeline_RS.pickle
 models/AFL_pipeline_RS_components.pickle
-
+future data/
+data/
+.vscode/extensions.json
