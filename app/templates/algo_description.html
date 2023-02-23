@@ -9,6 +9,36 @@
     
     <h1>Algorithm Description</h1>
     
+    1. Data was crawled and scraped from the afltables, and validated by footywire data; data were then stored by game
+    <br><br>
+    2. Additional features were generated
+    <br><br>
+    3. Features were normalised (x-mean)/sd within each game
+    <br><br>
+    4. Brownlow votes were turned into three labels using one hot encoding (i.e. 1 vote model: player with 1 vote has label 1, every other player 0; 2 vote model: player with 2 votes has label 2, every other player 0 etc); thus three final models were required
+    <br><br>
+    5. For each model, features that had abs(correlation with label) higher than 0.1 were selected
+    <br><br>
+    6. Many regression models were attempted (tuned to best validation score hyperparameter combination)
+    <br><br>
+
+    -  <em>models attempted includes: Linear Regression (with regularisation), Binomial Regression, K-Nearest Neighbour Regressor, Random Forest Regressor, AdaBoost Regressor, GradientBoost Regressor, XGB Regressor, LightGBM Regressor, CatBoost Regressor, Explainable Boosting Machine Regressor, Fully Connected Neural Network Regressor</em>
+    <br><br>
+
+    Prediction
+    <br><br>
+    7. Each game was put through the three models to get predicted outputs. 
+    <ul>
+    
+        <li>the player with highest predicted score for 3-votes model gets 3 predicted votes</li>
+        
+        <li>the player with highest predicted score for 2-votes model gets 2 predicted votes, unless they have already received 3 votes in which case the second ranked player for this model gets 2 votes</li>
+        
+        <li>the player with highest predicted score for 1-votes model gets 1 predicted votes, unless they have already received 3 votes or 2 votes in which case the second ranked player for this model gets 1 vote. If the second ranked player also has received a higher vote then the third ranked player receives 1 vote</li>
+
+    </ul>
+    8. Each game's votes are tallied up and the player with the highest vote for the season is the predicted Brownlow Winner
+    <br><br>
 
 
     <p>

@@ -430,6 +430,9 @@ for year in years:
     
     time.sleep(random.uniform(0.5, 5))
 
+if not os.path.exists(f'../future data/raw'):
+    os.makedirs(f'../future data/raw')
+
 try:
     PROCESSED_FILELIST = os.listdir(f'../future data/curated/NormalisedData')
 except:
