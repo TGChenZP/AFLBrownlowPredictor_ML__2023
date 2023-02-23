@@ -33,7 +33,7 @@ Prediction
 8. Each game's votes are tallied up and the player with the highest vote for the season is the predicted Brownlow Winner
 <br>
 
-**Tuning Results (r<sup>2</sup> score)**
+**Tuning Results (Validation dataset r<sup>2</sup> score)**
 | Model | 1      | 2      | 3      |
 |-------|--------|--------|--------|
 | KNN   | 0.3996 | 0.0926 | 0.1103 |
