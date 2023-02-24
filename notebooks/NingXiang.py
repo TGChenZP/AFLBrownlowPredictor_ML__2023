@@ -61,7 +61,7 @@ class NingXiang:
 
 
 
-    def get_lr_based_feature_combinations(self):
+    def get_lr_based_feature_combinations(self, min_features = 0):
         """ Get NingXiang scores based on LR feature importance """
 
         if self.clf_type == None:
@@ -106,15 +106,16 @@ class NingXiang:
             remaining_features.remove(added_feature) # remove added feature
             print(f'Current combination: {curr_combo}')
             print(f'Best score: {np.sqrt(best_score)}\n')
-
-            # store in ningxiang output
-            self.ningxiang_output[tuple(curr_combo)] = np.sqrt(best_score)
+            
+            if i+1 >= min_features:
+                # store in ningxiang output
+                self.ningxiang_output[tuple(curr_combo)] = np.sqrt(best_score)
         
         return self.ningxiang_output
 
     
 
-    def get_rf_based_feature_combinations(self):
+    def get_rf_based_feature_combinations(self, min_features = 0):
         """ Gets NingXiang scores based on RF feature importance """
         
         if self.clf_type == None:
@@ -139,19 +140,19 @@ class NingXiang:
         feature_importance = {self.train_x.columns[i]:rf.feature_importances_[i] for i in range(len(self.train_x.columns))}
 
         # use handle (which can be used on its own) to generate the ningxiang output
-        self.ningxiang_output = self.get_rf_based_feature_combinations_from_feature_importance(feature_importance)
+        self.ningxiang_output = self.get_rf_based_feature_combinations_from_feature_importance(feature_importance, min_features)
 
         return self.ningxiang_output
     
 
 
-    def get_rf_based_feature_combinations_from_feature_importance(self, feature_importance):
+    def get_rf_based_feature_combinations_from_feature_importance(self, feature_importance, min_features = 0):
         """ Takes in a dictionary of features:importance and returns feature importance"""
         
         # sort features by feature importance (reversed order)
         feature_importance_sorted = self._sort_dict_reverse(feature_importance)
         # get the features in the output format that can be linked up with other JiaXing packages
-        self.ningxiang_output = self._get_ningxiang_rf_output(feature_importance_sorted)
+        self.ningxiang_output = self._get_ningxiang_rf_output(feature_importance_sorted, min_features)
 
         return self.ningxiang_output
         
@@ -169,7 +170,7 @@ class NingXiang:
     
 
 
-    def _get_ningxiang_rf_output(self, features_reverse_sorted):
+    def _get_ningxiang_rf_output(self, features_reverse_sorted, min_features):
         """ Helper to get rf feature importance into ningxiang output format """
 
         out = dict() # NingXiang output object must be a dict
@@ -177,6 +178,7 @@ class NingXiang:
         feature_combo = list()
         score = 0
 
+        i = 0
         # Continuously add feature and its score
         for feature in features_reverse_sorted:
             feature_combo.append(feature)
@@ -184,7 +186,10 @@ class NingXiang:
 
             combo = tuple(feature_combo)
 
-            out[combo] = score
+            if i+1 >= min_features:
+                out[combo] = score
+
+            i += 1
 
         return out
 
