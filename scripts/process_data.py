@@ -72,7 +72,7 @@ def norm_OT(df, colname):
     
     out1 = pd.DataFrame(((tmp1[colname]-t1_mean)/t1_std))
     out2 = pd.DataFrame(((tmp2[colname]-t2_mean)/t2_std))
-    out = out1.append(out2)
+    out = pd.concat([out1, out2])
     
     return out
 
@@ -91,7 +91,7 @@ def norm_OT_inv(df, colname):
     
     out1 = pd.DataFrame((-1*(tmp1[colname]-t1_mean)/t1_std))
     out2 = pd.DataFrame((-1*(tmp2[colname]-t2_mean)/t2_std))
-    out = out1.append(out2)
+    out = pd.concat([out1, out2])
     
     return out
 
