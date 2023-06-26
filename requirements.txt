@@ -1,0 +1,12 @@
+bs4
+urllib3
+requests
+pandas
+scikit-learn
+numpy
+matplotlib
+seaborn
+catboost
+interpret
+lightgbm
+xgboost
