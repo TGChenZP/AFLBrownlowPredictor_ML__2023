@@ -64,7 +64,7 @@ def scrape(url):
     
     
     # Get advanced player statistics
-    time.sleep(random.uniform(0.5, 5))    # First sleep for a random amount of time - trying to hide crawler activity
+    time.sleep(random.uniform(0.5, 1))    # First sleep for a random amount of time - trying to hide crawler activity
     
     urlAdv = url + '&advv=Y' # Because advanced statistic's URL is only different from orig URL by this string
     pageAdv = requests.get(urlAdv)
@@ -266,10 +266,7 @@ def getdata(teamplayerstats):
     gamestatscol = list()
     tmp = list()
     for i in range(len(gamestatsrow)):
-        if i == 0:
-            tmp.append(gamestatsrow[0][0])
-        else:
-            tmp.append(re.findall(r'>.*<',gamestatsrow[i][0])[0].strip('><').split('<')[0])
+        tmp.append(re.findall(r'>.*<',gamestatsrow[i][0])[0].strip('><').split('<')[0])
     gamestatscol.append(tmp)
 
     
@@ -323,10 +320,7 @@ def getadvdata(teamplayerstats):
     gamestatscolA = list()
     tmp = list()
     for i in range(len(gamestatsrow)):
-        if i == 0:
-            tmp.append(gamestatsrow[0][0])
-        else:
-            tmp.append(re.findall(r'>.*<',gamestatsrow[i][0])[0].strip('><'))
+        tmp.append(re.findall(r'>.*<',gamestatsrow[i][0])[0].strip('><'))
     gamestatscolA.append(tmp)
 
     
@@ -428,7 +422,7 @@ for year in years:
             gameurl.append(urljoin(base_url, section['href']))
     urllist.append(gameurl)
     
-    time.sleep(random.uniform(0.5, 5))
+    time.sleep(random.uniform(0.5, 1))
 
 if not os.path.exists(f'../future data/raw'):
     os.makedirs(f'../future data/raw')
@@ -447,4 +441,4 @@ for year in urllist:
             out = combine(test1, test2)
             save(out, metadata, 'O')
         
-        time.sleep(random.uniform(0.5, 5))
+        time.sleep(random.uniform(0.5, 1))
