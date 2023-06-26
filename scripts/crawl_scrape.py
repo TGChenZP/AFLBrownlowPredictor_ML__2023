@@ -10,7 +10,7 @@ import sys
 
 
 def scrape(url):
-    """ Funciton which scrapes the given FootyWire webpage """
+    """ Function which scrapes the given FootyWire webpage """
     
     # Scrape first page
     page = requests.get(url)
@@ -47,7 +47,7 @@ def scrape(url):
     rows=results.find_all('tr')
    
     tick = 0
-    for i in range(len(rows)):
+    for i in range(1, len(rows)): # recent update of website: 0th item is a table of both teams - messes up our structure
         if not tick and len(rows[i].find_all('tr'))>24: # From experiment, blocks that contain player data (what we want) has more than 25 rows
             team1stats=rows[i]
             tick=1
@@ -64,7 +64,7 @@ def scrape(url):
     
     
     # Get advanced player statistics
-    time.sleep(random.uniform(0.5, 5))    # First sleep for a random amount of time - trying to hide crawler activity
+    time.sleep(random.uniform(0.5, 1))    # First sleep for a random amount of time - trying to hide crawler activity
     
     urlAdv = url + '&advv=Y' # Because advanced statistic's URL is only different from orig URL by this string
     pageAdv = requests.get(urlAdv)
@@ -74,7 +74,7 @@ def scrape(url):
     rowsAdv=resultsAdv.find_all('tr')
 
     tick = 0
-    for i in range(len(rowsAdv)):
+    for i in range(1, len(rowsAdv)): # recent update of website: 0th item is a table of both teams - messes up our structure
         if not tick and len(rowsAdv[i].find_all('tr'))>24:
             team1stats=rowsAdv[i]
             tick=1
@@ -266,10 +266,7 @@ def getdata(teamplayerstats):
     gamestatscol = list()
     tmp = list()
     for i in range(len(gamestatsrow)):
-        if i == 0:
-            tmp.append(gamestatsrow[0][0])
-        else:
-            tmp.append(re.findall(r'>.*<',gamestatsrow[i][0])[0].strip('><').split('<')[0])
+        tmp.append(re.findall(r'>.*<',gamestatsrow[i][0])[0].strip('><').split('<')[0])
     gamestatscol.append(tmp)
 
     
@@ -323,10 +320,7 @@ def getadvdata(teamplayerstats):
     gamestatscolA = list()
     tmp = list()
     for i in range(len(gamestatsrow)):
-        if i == 0:
-            tmp.append(gamestatsrow[0][0])
-        else:
-            tmp.append(re.findall(r'>.*<',gamestatsrow[i][0])[0].strip('><'))
+        tmp.append(re.findall(r'>.*<',gamestatsrow[i][0])[0].strip('><'))
     gamestatscolA.append(tmp)
 
     
@@ -428,7 +422,7 @@ for year in years:
             gameurl.append(urljoin(base_url, section['href']))
     urllist.append(gameurl)
     
-    time.sleep(random.uniform(0.5, 5))
+    time.sleep(random.uniform(0.5, 1))
 
 if not os.path.exists(f'../future data/raw'):
     os.makedirs(f'../future data/raw')
@@ -447,4 +441,4 @@ for year in urllist:
             out = combine(test1, test2)
             save(out, metadata, 'O')
         
-        time.sleep(random.uniform(0.5, 5))
+        time.sleep(random.uniform(0.5, 1))
