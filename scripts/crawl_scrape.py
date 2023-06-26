@@ -10,7 +10,7 @@ import sys
 
 
 def scrape(url):
-    """ Funciton which scrapes the given FootyWire webpage """
+    """ Function which scrapes the given FootyWire webpage """
     
     # Scrape first page
     page = requests.get(url)
@@ -47,7 +47,7 @@ def scrape(url):
     rows=results.find_all('tr')
    
     tick = 0
-    for i in range(len(rows)):
+    for i in range(1, len(rows)): # recent update of website: 0th item is a table of both teams - messes up our structure
         if not tick and len(rows[i].find_all('tr'))>24: # From experiment, blocks that contain player data (what we want) has more than 25 rows
             team1stats=rows[i]
             tick=1
@@ -74,7 +74,7 @@ def scrape(url):
     rowsAdv=resultsAdv.find_all('tr')
 
     tick = 0
-    for i in range(len(rowsAdv)):
+    for i in range(1, len(rowsAdv)): # recent update of website: 0th item is a table of both teams - messes up our structure
         if not tick and len(rowsAdv[i].find_all('tr'))>24:
             team1stats=rowsAdv[i]
             tick=1
