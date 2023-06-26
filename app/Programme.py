@@ -18,16 +18,16 @@ def home():
 
 @app.route("/scrape_data")
 def scrape_data():
-    subprocess.run(f'python crawl_scrape.py {date.today().year}', shell=True, cwd = '../scripts')
+    subprocess.run(f'python3 crawl_scrape.py {date.today().year}', shell=True, cwd = '../scripts')
     print('Finished Crawling')
-    subprocess.run(f'python process_data.py {date.today().year}', shell=True, cwd = '../scripts')
+    subprocess.run(f'python3 process_data.py {date.today().year}', shell=True, cwd = '../scripts')
 
     return render_template('home.html', date = date.today(), tables=[read_leaderboard().to_html(classes='data', index=False)])
 
 
 @app.route("/run_predictions")
 def run_predictions():
-    subprocess.run(f'python predict.py {date.today().year}', shell=True, cwd = '../scripts')
+    subprocess.run(f'python3 predict.py {date.today().year}', shell=True, cwd = '../scripts')
 
     return render_template('home.html', date = date.today(), tables=[read_leaderboard().to_html(classes='data', index=False)])
 
