@@ -283,6 +283,194 @@
       "1": "Jack Petruccelle"
     }
   },
+  "Round 16": {
+    "Adelaide v NorthMelbourne": {
+      "3": "Ben Keays",
+      "2": "Rory Sloane",
+      "1": "Bailey Scott"
+    },
+    "Brisbane v Richmond": {
+      "3": "Hugh McCluggage",
+      "2": "Joe Daniher",
+      "1": "Judson Clarke"
+    },
+    "Essendon v PortAdelaide": {
+      "3": "Connor Rozee",
+      "2": "Dan Houston",
+      "1": "Andrew McGrath"
+    },
+    "GoldCoast v Collingwood": {
+      "3": "Nick Daicos",
+      "2": "Jamie Elliott",
+      "1": "Malcolm Rosas"
+    },
+    "Hawthorn v Carlton": {
+      "3": "Adam Cerra",
+      "2": "Patrick Cripps",
+      "1": "Dylan Moore"
+    },
+    "Melbourne v GWS": {
+      "3": "Joshua Kelly",
+      "2": "Tom Green",
+      "1": "Brodie Grundy"
+    },
+    "Sydney v Geelong": {
+      "3": "Gryan Miers",
+      "2": "Luke Parker",
+      "1": "Patrick Dangerfield"
+    },
+    "WestCoast v StKilda": {
+      "3": "Rowan Marshall",
+      "2": "Mitchito Owens",
+      "1": "Andrew Gaff"
+    },
+    "WesternBulldogs v Fremantle": {
+      "3": "Caleb Serong",
+      "2": "Liam Henry",
+      "1": "Alex Pearce"
+    }
+  },
+  "Round 17": {
+    "Brisbane v WestCoast": {
+      "3": "Lachie Neale",
+      "2": "Will Ashcroft",
+      "1": "Alex Witherden"
+    },
+    "Essendon v Adelaide": {
+      "3": "Darcy Parish",
+      "2": "Zachary Merrett",
+      "1": "Brodie Smith"
+    },
+    "Fremantle v Carlton": {
+      "3": "Luke Ryan",
+      "2": "Charlie Curnow",
+      "1": "Neil Erasmus"
+    },
+    "GWS v Hawthorn": {
+      "3": "Stephen Coniglio",
+      "2": "Jesse Hogan",
+      "1": "Chad Wingard"
+    },
+    "Geelong v NorthMelbourne": {
+      "3": "Tyson Stengle",
+      "2": "Luke D-Uniacke",
+      "1": "Charlie Lazzaro"
+    },
+    "PortAdelaide v GoldCoast": {
+      "3": "Connor Rozee",
+      "2": "Oliver Wines",
+      "1": "Lachlan Weller"
+    },
+    "Richmond v Sydney": {
+      "3": "Errol Gulden",
+      "2": "Shai Bolton",
+      "1": "Hayden McLean"
+    },
+    "StKilda v Melbourne": {
+      "3": "Christian Petracca",
+      "2": "Rowan Marshall",
+      "1": "Anthony Caminiti"
+    },
+    "WesternBulldogs v Collingwood": {
+      "3": "Nick Daicos",
+      "2": "Cody Weightman",
+      "1": "Rory Lobb"
+    }
+  },
+  "Round 18": {
+    "Adelaide v GWS": {
+      "3": "Toby Greene",
+      "2": "Rory Laird",
+      "1": "Ned McHenry"
+    },
+    "Carlton v PortAdelaide": {
+      "3": "Dan Houston",
+      "2": "Connor Rozee",
+      "1": "Kane Farrell"
+    },
+    "Collingwood v Fremantle": {
+      "3": "Nick Daicos",
+      "2": "Jaeger O'Meara",
+      "1": "Luke Jackson"
+    },
+    "Geelong v Essendon": {
+      "3": "Tom Hawkins",
+      "2": "Tom Atkins",
+      "1": "Kyle Langford"
+    },
+    "GoldCoast v StKilda": {
+      "3": "Rory Atkins",
+      "2": "Sam Flanders",
+      "1": "Jade Gresham"
+    },
+    "Melbourne v Brisbane": {
+      "3": "Christian Petracca",
+      "2": "Angus Brayshaw",
+      "1": "Conor McKenna"
+    },
+    "NorthMelbourne v Hawthorn": {
+      "3": "James Worpel",
+      "2": "Karl Amon",
+      "1": "Paul Curtis"
+    },
+    "Sydney v WesternBulldogs": {
+      "3": "Tom Papley",
+      "2": "Thomas Liberatore",
+      "1": "Caleb Daniel"
+    },
+    "WestCoast v Richmond": {
+      "3": "Daniel Rioli",
+      "2": "Dustin Martin",
+      "1": "Jack Darling"
+    }
+  },
+  "Round 19": {
+    "Brisbane v Geelong": {
+      "3": "Jeremy Cameron",
+      "2": "Joe Daniher",
+      "1": "Sam De Koning"
+    },
+    "Carlton v WestCoast": {
+      "3": "George Hewett",
+      "2": "Sam Docherty",
+      "1": "Jayden Hunt"
+    },
+    "Essendon v WesternBulldogs": {
+      "3": "Marcus Bontempelli",
+      "2": "Thomas Liberatore",
+      "1": "Kyle Langford"
+    },
+    "Fremantle v Sydney": {
+      "3": "Caleb Serong",
+      "2": "Luke Parker",
+      "1": "Michael Walters"
+    },
+    "GWS v GoldCoast": {
+      "3": "Stephen Coniglio",
+      "2": "Joshua Kelly",
+      "1": "Touk Miller"
+    },
+    "Melbourne v Adelaide": {
+      "3": "Jack Viney",
+      "2": "Christian Petracca",
+      "1": "Brayden Cook"
+    },
+    "PortAdelaide v Collingwood": {
+      "3": "Connor Rozee",
+      "2": "Zak Butters",
+      "1": "Jed McEntee"
+    },
+    "Richmond v Hawthorn": {
+      "3": "Jai Newcombe",
+      "2": "Tim Taranto",
+      "1": "Josh Ward"
+    },
+    "StKilda v NorthMelbourne": {
+      "3": "Luke D-Uniacke",
+      "2": "Jack Sinclair",
+      "1": "Liam Shiels"
+    }
+  },
   "Round 2": {
     "Adelaide v Richmond": {
       "3": "Rory Laird",
@@ -328,6 +516,241 @@
       "3": "Jack Sinclair",
       "2": "Jack Steele",
       "1": "Taylor Duryea"
+    }
+  },
+  "Round 20": {
+    "Adelaide v PortAdelaide": {
+      "3": "Matt Crouch",
+      "2": "Taylor Walker",
+      "1": "Lachlan Jones"
+    },
+    "Collingwood v Carlton": {
+      "3": "Nick Daicos",
+      "2": "Charlie Curnow",
+      "1": "Will H-Elliott"
+    },
+    "Essendon v Sydney": {
+      "3": "Errol Gulden",
+      "2": "Kyle Langford",
+      "1": "Nick Hind"
+    },
+    "Geelong v Fremantle": {
+      "3": "Andrew Brayshaw",
+      "2": "Luke Ryan",
+      "1": "Mark Blicavs"
+    },
+    "GoldCoast v Brisbane": {
+      "3": "Ben King",
+      "2": "Josh Dunkley",
+      "1": "Darcy Wilmot"
+    },
+    "Hawthorn v StKilda": {
+      "3": "Brad Crouch",
+      "2": "Luke Breust",
+      "1": "Tyler Brockman"
+    },
+    "Richmond v Melbourne": {
+      "3": "Harrison Petty",
+      "2": "Shai Bolton",
+      "1": "Jack Graham"
+    },
+    "WestCoast v NorthMelbourne": {
+      "3": "Paul Curtis",
+      "2": "Tim Kelly",
+      "1": "Robert Hansen"
+    },
+    "WesternBulldogs v GWS": {
+      "3": "Adam Treloar",
+      "2": "Toby Greene",
+      "1": "Bailey Smith"
+    }
+  },
+  "Round 21": {
+    "Adelaide v GoldCoast": {
+      "3": "Matt Crouch",
+      "2": "Mitchell Hinge",
+      "1": "Ben Ainsworth"
+    },
+    "Essendon v WestCoast": {
+      "3": "Kyle Langford",
+      "2": "Darcy Parish",
+      "1": "Luke Edwards"
+    },
+    "Fremantle v Brisbane": {
+      "3": "Caleb Serong",
+      "2": "Andrew Brayshaw",
+      "1": "Josh Corbett"
+    },
+    "GWS v Sydney": {
+      "3": "Errol Gulden",
+      "2": "Hayden McLean",
+      "1": "Ryan Angwin"
+    },
+    "Geelong v PortAdelaide": {
+      "3": "Gryan Miers",
+      "2": "Connor Rozee",
+      "1": "Xavier Duursma"
+    },
+    "Hawthorn v Collingwood": {
+      "3": "James Sicily",
+      "2": "Conor Nash",
+      "1": "Josh Daicos"
+    },
+    "NorthMelbourne v Melbourne": {
+      "3": "Lachlan Hunter",
+      "2": "Angus Brayshaw",
+      "1": "Charlie Lazzaro"
+    },
+    "StKilda v Carlton": {
+      "3": "Nic Newman",
+      "2": "Mason Wood",
+      "1": "Bradley Hill"
+    },
+    "WesternBulldogs v Richmond": {
+      "3": "Marcus Bontempelli",
+      "2": "Jamarra U-Hagan",
+      "1": "Liam Baker"
+    }
+  },
+  "Round 22": {
+    "Brisbane v Adelaide": {
+      "3": "Hugh McCluggage",
+      "2": "Matt Crouch",
+      "1": "Lachlan Murphy"
+    },
+    "Carlton v Melbourne": {
+      "3": "Christian Petracca",
+      "2": "George Hewett",
+      "1": "Kade Chandler"
+    },
+    "Collingwood v Geelong": {
+      "3": "Josh Daicos",
+      "2": "Tom Atkins",
+      "1": "Isaac Smith"
+    },
+    "Hawthorn v WesternBulldogs": {
+      "3": "Karl Amon",
+      "2": "Marcus Bontempelli",
+      "1": "Caleb Daniel"
+    },
+    "NorthMelbourne v Essendon": {
+      "3": "Nicholas Martin",
+      "2": "Nick Larkey",
+      "1": "Jy Simpkin"
+    },
+    "PortAdelaide v GWS": {
+      "3": "Zak Butters",
+      "2": "Tom Green",
+      "1": "Lachlan Ash"
+    },
+    "StKilda v Richmond": {
+      "3": "Max King",
+      "2": "Jack Sinclair",
+      "1": "Kamdyn Mcintosh"
+    },
+    "Sydney v GoldCoast": {
+      "3": "Chad Warner",
+      "2": "Tom Papley",
+      "1": "Darcy Macpherson"
+    },
+    "WestCoast v Fremantle": {
+      "3": "Lachlan Schultz",
+      "2": "Andrew Brayshaw",
+      "1": "Jamaine Jones"
+    }
+  },
+  "Round 23": {
+    "Adelaide v Sydney": {
+      "3": "Errol Gulden",
+      "2": "Matt Crouch",
+      "1": "Max Michalanney"
+    },
+    "Collingwood v Brisbane": {
+      "3": "Scott Pendlebury",
+      "2": "Tom Mitchell",
+      "1": "Nathan Murphy"
+    },
+    "Fremantle v PortAdelaide": {
+      "3": "Caleb Serong",
+      "2": "Andrew Brayshaw",
+      "1": "James Aish"
+    },
+    "GWS v Essendon": {
+      "3": "Tom Green",
+      "2": "Stephen Coniglio",
+      "1": "Nick Hind"
+    },
+    "GoldCoast v Carlton": {
+      "3": "Charlie Curnow",
+      "2": "Ben Ainsworth",
+      "1": "Jack Lukosius"
+    },
+    "Melbourne v Hawthorn": {
+      "3": "James Worpel",
+      "2": "Conor Nash",
+      "1": "Luke Breust"
+    },
+    "Richmond v NorthMelbourne": {
+      "3": "Nick Larkey",
+      "2": "Shai Bolton",
+      "1": "Daniel Howe"
+    },
+    "StKilda v Geelong": {
+      "3": "Jack Sinclair",
+      "2": "Max King",
+      "1": "Tom Hawkins"
+    },
+    "WesternBulldogs v WestCoast": {
+      "3": "Jamie Cripps",
+      "2": "Adam Treloar",
+      "1": "Bailey Smith"
+    }
+  },
+  "Round 24": {
+    "Brisbane v StKilda": {
+      "3": "Lachie Neale",
+      "2": "Jarrod Berry",
+      "1": "Mason Wood"
+    },
+    "Carlton v GWS": {
+      "3": "Toby Greene",
+      "2": "Lachie Whitfield",
+      "1": "Mitch McGovern"
+    },
+    "Essendon v Collingwood": {
+      "3": "Zachary Merrett",
+      "2": "Tom Mitchell",
+      "1": "Kyle Langford"
+    },
+    "Geelong v WesternBulldogs": {
+      "3": "Isaac Smith",
+      "2": "Thomas Liberatore",
+      "1": "Gryan Miers"
+    },
+    "Hawthorn v Fremantle": {
+      "3": "Andrew Brayshaw",
+      "2": "Caleb Serong",
+      "1": "Ned Reeves"
+    },
+    "NorthMelbourne v GoldCoast": {
+      "3": "Matt Rowell",
+      "2": "Sam Flanders",
+      "1": "Malcolm Rosas"
+    },
+    "PortAdelaide v Richmond": {
+      "3": "Connor Rozee",
+      "2": "Dustin Martin",
+      "1": "Jack Ross"
+    },
+    "Sydney v Melbourne": {
+      "3": "Errol Gulden",
+      "2": "Christian Petracca",
+      "1": "Harry Cunningham"
+    },
+    "WestCoast v Adelaide": {
+      "3": "Taylor Walker",
+      "2": "Rory Laird",
+      "1": "Luke Edwards"
     }
   },
   "Round 3": {
