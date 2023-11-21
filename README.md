@@ -1,4 +1,4 @@
-# BrownlowPredictor (2023 Version - Using more than Linear Regression)
+# Model for Predicting Brownlow Medal Winner (Using more than Linear Regression)
 - Author: Lang (Ron) Chen
 - Date: Dec 2022 - Feb 2023
 
