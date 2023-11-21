@@ -1,4 +1,4 @@
-# BrownlowPredictor (2023 Version)
+# BrownlowPredictor (2023 Version - Using more than Linear Regression)
 - Author: Lang (Ron) Chen
 - Date: Dec 2022 - Feb 2023
 
