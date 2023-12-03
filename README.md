@@ -5,7 +5,7 @@
 
 **Presentables**
 - Flask web application at `./app/Programme.py`
-- To run web application, please open terminal at `./app` and input `export FLASK_APP='Programme.py` and `flask run` before heading to the link as described printed in the terminal
+- To run web application, please open terminal at `./app` and input `export FLASK_APP='Programme.py'` and `flask run` before heading to the link as described printed in the terminal
 - First click **scrape data** (may take a moment), followed by **predict**
 - You can view game by game prediction by clicking **Game by Game Prediction**
 
