@@ -64,17 +64,17 @@ Model for 3 votes
 
 ![Local Image](plots/3votes_importance.png)
 
+We can see quite clearly that players with high disposals and goals (within both teams) are most likely to get 3 votes in a game, as their features are most important. Effective disposals and score involvement in general is also important, while contested possessions, inside 50s and stoppage clearance are also notable important features. This goes to suggest that ball-winning midfielders who can hit the scoreboard/get involved with scoring are most favoured by umpires (who makes the votes). The fact that score involvement and effective disposals are ranked highly in feature importance partially busts the myth that Brownlow Medals are given to those that hog the ball and doesn't use it effectively.
+
 Model for 2 votes
 
 ![Local Image](plots/2votes_importance.png)
 
+For 2-vote getters, goals are the most important factor, then disposals and score involvements. Contested possessions, score involvements and centre clearances still play a big part in determining whether a player is likely to receive 2 votes.
+
 Model for 1 vote
 
 ![Local Image](plots/1vote_importance.png)
-
-We can see quite clearly that players with high disposals and goals (within both teams) are most likely to get 3 votes in a game, as their features are most important. Effective disposals and score involvement in general is also important, while contested possessions, inside 50s and stoppage clearance are also notable important features. This goes to suggest that ball-winning midfielders who can hit the scoreboard/get involved with scoring are most favoured by umpires (who makes the votes). The fact that score involvement and effective disposals are ranked highly in feature importance partially busts the myth that Brownlow Medals are given to those that hog the ball and doesn't use it effectively.
-
-For 2-vote getters, goals are the most important factor, then disposals and score involvements. Contested possessions, score involvements and centre clearances still play a big part in determining whether a player is likely to receive 2 votes.
 
 For 1-vote getters, goals scored seems to be the overarching important feature followed by a host of others, including marks. This suggest 1 vote getters to be more general in characteristics compared to the previous two class of award winners.
 
