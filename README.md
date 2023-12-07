@@ -81,6 +81,11 @@ For 1-vote getters, "goals scored" seems to be the overarching important feature
 "Marks" nonetheless was a significant aspect of the game not to feature prominently in the model, suggesting defenders to be worst biased against by umpires when casting Brownlow Medal votes, as this is a statistic that defenders generally excel at. As were tackles, which only featured highly in the 1 vote model, demonstrating that the medal is not as favoured towards pure inside-midfielders that do the dirty work as opposed to those that touches the ball more. The model suggests "win-loss" to have no effect on the 3 votes or 2 votes as it was not selected at all in those models.
 
 
+**Future Directions of Work**
+1. Cumulative models (i.e. {3} vs {2 1 0}; {3 2} vs {1 0}; {3 2 1} vs {0}) can be trained instead. Then, only the top 3 of the {3 2 1} vs {0} model will proceed to be predicted in the next model, where top 2 proceed to the final model. This is inspired by NLP's Named Entilty Recognition (2 step supervised learning), but is vulnerable to error accumulation.
+   
+2. Try to rebalance the classes (upsample/downsample); in both original and cumulative models.
+
 
 **Bibliography**
 
