@@ -62,17 +62,19 @@ def predict_brownlow(csv_list):
             pred = pd.DataFrame({'player': player, '3': pred3, '2': pred2, '1': pred1})
 
             three_votes = list(pred.sort_values('3', ascending = False)['player'])[0]
+            two_votes = list(pred.sort_values('3', ascending = False)['player'])[1]
+            one_vote = list(pred.sort_values('3', ascending = False)['player'])[2]
 
-            two_votes = list(pred.sort_values('2', ascending = False)['player'])[0]
-            if two_votes == three_votes:
-                two_votes = list(pred.sort_values('2', ascending = False)['player'])[1]
+            # two_votes = list(pred.sort_values('2', ascending = False)['player'])[0]
+            # if two_votes == three_votes:
+            #     two_votes = list(pred.sort_values('2', ascending = False)['player'])[1]
 
-            one_vote = list(pred.sort_values('1', ascending = False)['player'])[0]
-            if one_vote in (three_votes, two_votes):
-                one_vote = list(pred.sort_values('2', ascending = False)['player'])[1]
+            # one_vote = list(pred.sort_values('1', ascending = False)['player'])[0]
+            # if one_vote in (three_votes, two_votes):
+            #     one_vote = list(pred.sort_values('2', ascending = False)['player'])[1]
                 
-                if one_vote in (three_votes, two_votes):
-                    one_vote = list(pred.sort_values('2', ascending = False)['player'])[2]
+            #     if one_vote in (three_votes, two_votes):
+            #         one_vote = list(pred.sort_values('2', ascending = False)['player'])[2]
             
             game_dict[3] = three_votes
             game_dict[2] = two_votes
