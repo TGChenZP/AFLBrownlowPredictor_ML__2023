@@ -1,4 +1,4 @@
-# Model for Predicting Brownlow Medal Winner (Using more than Linear Regression)
+# Model for Predicting Brownlow Medal Winner (Using Machine Learning Models)
 - Author: Lang (Ron) Chen
 - Date: Dec 2022 - Feb 2023
 
